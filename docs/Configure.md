@@ -7,6 +7,7 @@
   * [Splitting the configuration](#splitting-the-configuration)
 * [Options reference](#options-reference)
   * [Network identity](#network-identity)
+  * [XBT Knots compatibility](#xbt-knots-compatibility)
 * [Customize features](#customize-features)
 * [Customize feerate tolerance](#customize-feerate-tolerance)
 * [Examples](#examples)
@@ -81,6 +82,25 @@ The current profiles are `mainnet`, `testnet4`, and `regtest`. The legacy
 configuration value `testnet` is accepted as an alias for `testnet4`. XBT
 currently uses the same genesis hash for both identities, but the separate
 profile fields make the distinction explicit for future network extensions.
+
+### XBT Knots compatibility
+
+At startup, Eclair selects the XBT consensus profile derived from the pinned
+Bitcoin Knots reference implementation. It validates Bitcoin Core's reported
+chain and genesis hash, then invokes the required startup RPC methods:
+
+* `getblockchaininfo`
+* `getblockhash`
+* `getnetworkinfo`
+* `getrawtransaction`
+* `listwallets`
+* `listunspent`
+
+The Bitcoin Core version check is supplementary: compatibility is determined
+by the active chain profile, consensus parameters, genesis identity, and RPC
+behavior rather than by a version string alone. Regtest keeps the BLAKE2b fork
+unscheduled by default, matching Knots; custom activation heights are reserved
+for the dedicated Regtest compatibility tests.
 
 ## Customize features
 
