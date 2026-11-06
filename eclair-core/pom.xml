@@ -197,8 +197,8 @@
         </dependency>
         <!-- BITCOIN -->
         <dependency>
-            <groupId>fr.acinq</groupId>
-            <artifactId>bitcoin-lib_${scala.version.short}</artifactId>
+            <groupId>com.ashbornelabs</groupId>
+            <artifactId>bitcoin-xbt-lib_${scala.version.short}</artifactId>
             <version>${bitcoinlib.version}</version>
             <exclusions>
                 <exclusion>
