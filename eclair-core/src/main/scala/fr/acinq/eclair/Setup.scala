@@ -49,7 +49,7 @@ import fr.acinq.eclair.router._
 import fr.acinq.eclair.tor.{Controller, TorProtocolHandler}
 import fr.acinq.eclair.wire.protocol.NodeAddress
 import grizzled.slf4j.Logging
-import org.json4s.JsonAST.JArray
+import org.json4s.JsonAST.{JArray, JValue}
 import scodec.bits.ByteVector
 import sttp.client3.okhttp.OkHttpFutureBackend
 
@@ -149,10 +149,17 @@ class Setup(val datadir: File,
 
     case class BitcoinStatus(version: Int, bitcoinCoreChain: String, bitcoinGenesisHash: BlockHash, initialBlockDownload: Boolean, verificationProgress: Double, blockCount: Long, headerCount: Long, unspentAddresses: List[String])
 
+    def invokeRequired(bitcoinClient: BasicBitcoinJsonRPCClient, method: String, params: Any*): Future[JValue] = {
+      require(knotsCompatibilityProfile.requiredRpcMethods.contains(method), s"RPC method '$method' is not declared by the Knots compatibility profile")
+      bitcoinClient.invoke(method, params: _*).recoverWith {
+        case exception => Future.failed(new RuntimeException(s"required Bitcoin Core RPC method '$method' failed", exception))
+      }
+    }
+
     def getBitcoinStatus(bitcoinClient: BasicBitcoinJsonRPCClient): Future[BitcoinStatus] = for {
-      json <- bitcoinClient.invoke("getblockchaininfo").recover { case e => throw BitcoinRPCConnectionException(e) }
+      json <- invokeRequired(bitcoinClient, "getblockchaininfo").recover { case e => throw BitcoinRPCConnectionException(e) }
       // Make sure wallet support is enabled in bitcoind.
-      wallets <- bitcoinClient.invoke("listwallets").recover { case e => throw BitcoinWalletDisabledException(e) }
+      wallets <- invokeRequired(bitcoinClient, "listwallets").recover { case e => throw BitcoinWalletDisabledException(e) }
         .collect {
           case JArray(values) => values.map(value => value.extract[String])
         }
@@ -162,16 +169,16 @@ class Setup(val datadir: File,
       blocks = (json \ "blocks").extract[Long]
       headers = (json \ "headers").extract[Long]
       // NB: bitcoind confusingly returns the blockId instead of the blockHash.
-      bitcoinGenesisHash <- bitcoinClient.invoke("getblockhash", 0).map(_.extract[String]).map(s => BlockId(ByteVector32.fromValidHex(s))).map(BlockHash(_))
-      bitcoinVersion <- bitcoinClient.invoke("getnetworkinfo").map(json => json \ "version").map(_.extract[Int])
-      unspentAddresses <- bitcoinClient.invoke("listunspent").recover { _ => if (wallet.isEmpty && wallets.length > 1) throw BitcoinDefaultWalletException(wallets) else throw BitcoinWalletNotLoadedException(wallet.getOrElse(""), wallets) }
+      bitcoinGenesisHash <- invokeRequired(bitcoinClient, "getblockhash", 0).map(_.extract[String]).map(s => BlockId(ByteVector32.fromValidHex(s))).map(BlockHash(_))
+      bitcoinVersion <- invokeRequired(bitcoinClient, "getnetworkinfo").map(json => json \ "version").map(_.extract[Int])
+      unspentAddresses <- invokeRequired(bitcoinClient, "listunspent").recover { _ => if (wallet.isEmpty && wallets.length > 1) throw BitcoinDefaultWalletException(wallets) else throw BitcoinWalletNotLoadedException(wallet.getOrElse(""), wallets) }
         .collect { case JArray(values) =>
           values
             .filter(value => (value \ "spendable").extract[Boolean])
             .map(value => (value \ "address").extract[String])
         }
       _ <- chainCheckTx match {
-        case Some(txid) => bitcoinClient.invoke("getrawtransaction", txid)
+        case Some(txid) => invokeRequired(bitcoinClient, "getrawtransaction", txid)
         case None => Future.successful(())
       }
     } yield BitcoinStatus(bitcoinVersion, bitcoinCoreChain, bitcoinGenesisHash, ibd, progress, blocks, headers, unspentAddresses)
