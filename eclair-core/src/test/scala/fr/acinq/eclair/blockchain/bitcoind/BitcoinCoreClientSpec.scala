@@ -221,7 +221,7 @@ class BitcoinCoreClientSpec extends TestKitBaseClass with BitcoindService with A
 
       def makeEvilBitcoinClient(changePosMod: Int => Int, txMod: Transaction => Transaction, feeMod: BigDecimal => BigDecimal = fee => fee): BitcoinCoreClient = {
         val badRpcClient = new BitcoinJsonRPCClient {
-          override def chainHash: BlockHash = bitcoinClient.rpcClient.chainHash
+          override def bitcoinGenesisHash: BlockHash = bitcoinClient.rpcClient.bitcoinGenesisHash
 
           override def wallet: Option[String] = if (useEclairSigner) Some("eclair") else None
 
