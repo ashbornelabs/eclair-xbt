@@ -72,7 +72,7 @@ class OfferTypesSpec extends AnyFunSuite {
       OfferIssuer("alice@bigshop.com"),
       OfferQuantityMax(0),
       OfferNodeId(nodeKey.publicKey)))
-    val encoded = "lno1qgsyxjtl6luzd9t3pr62xr7eemp6awnejusgf6gw45q75vcfqqqqqqqgqyeq5ym0venx2u3qwa5hg6pqw96kzmn5d968jys3v9kxjcm9gp3xjemndphhqtnrdak3gqqkyypsmuhrtwfzm85mht4a3vcp0yrlgua3u3m5uqpc6kf7nqjz6v70qwg"
+    val encoded = "lno1qgsy8uytm2c9pc6m2e7gvju373l4ptnjtt3du5aulwa09px6qqqqqqqgqyeq5ym0venx2u3qwa5hg6pqw96kzmn5d968jys3v9kxjcm9gp3xjemndphhqtnrdak3gqqkyypsmuhrtwfzm85mht4a3vcp0yrlgua3u3m5uqpc6kf7nqjz6v70qwg"
     assert(Offer.decode(encoded).get == offer)
     assert(offer.amount.contains(50 msat))
     assert(offer.description.contains("offer with quantity"))
