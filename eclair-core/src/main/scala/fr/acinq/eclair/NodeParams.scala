@@ -18,8 +18,9 @@ package fr.acinq.eclair
 
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueType}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
-import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32, Crypto, Satoshi, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockHash, ByteVector32, Crypto, Satoshi, SatoshiLong}
 import fr.acinq.eclair.Setup.Seeds
+import fr.acinq.eclair.blockchain.NetworkProfile
 import fr.acinq.eclair.blockchain.fee._
 import fr.acinq.eclair.channel.fsm.Channel
 import fr.acinq.eclair.channel.fsm.Channel.{BalanceThreshold, ChannelConf, UnhandledExceptionStrategy}
@@ -263,16 +264,13 @@ object NodeParams extends Logging {
     Seeds(nodeSeed, channelSeed)
   }
 
-  private val chain2Hash: Map[String, BlockHash] = Map(
-    "regtest" -> Block.RegtestGenesisBlock.hash,
-    "testnet" -> Block.Testnet4GenesisBlock.hash,
-    "testnet4" -> Block.Testnet4GenesisBlock.hash,
-    "mainnet" -> Block.LivenetGenesisBlock.hash
-  )
+  private def networkProfileFromChain(chain: String): NetworkProfile =
+    NetworkProfile.fromName(chain).getOrElse(throw new RuntimeException(s"invalid chain '$chain'"))
 
-  def hashFromChain(chain: String): BlockHash = chain2Hash.getOrElse(chain, throw new RuntimeException(s"invalid chain '$chain'"))
+  def hashFromChain(chain: String): BlockHash = networkProfileFromChain(chain).lightningChainHash
 
-  def chainFromHash(chainHash: BlockHash): String = chain2Hash.map(_.swap).getOrElse(chainHash, throw new RuntimeException(s"invalid chainHash '$chainHash'"))
+  def chainFromHash(chainHash: BlockHash): String =
+    NetworkProfile.fromLightningChainHash(chainHash).map(_.name).getOrElse(throw new RuntimeException(s"invalid lightning chain hash '$chainHash'"))
 
   def parseSocks5ProxyParams(config: Config): Option[Socks5ProxyParams] = {
     if (config.getBoolean("socks5.enabled")) {
@@ -372,7 +370,8 @@ object NodeParams extends Logging {
     require(!isFeatureByteVector, "configuration key 'features' have moved from bytevector to human readable (ex: 'feature-name' = optional/mandatory)")
 
     val chain = config.getString("chain")
-    val chainHash = hashFromChain(chain)
+    val networkProfile = networkProfileFromChain(chain)
+    val chainHash = networkProfile.lightningChainHash
 
     val channelFlags = ChannelFlags(announceChannel = config.getBoolean("channel.channel-flags.announce-channel"))
 
@@ -385,7 +384,7 @@ object NodeParams extends Logging {
     require(config.getInt("router.sync.max-queries-per-second") > 0, "router.sync.max-queries-per-second must be strictly greater than 0")
 
     val dustLimitSatoshis = Satoshi(config.getLong("channel.dust-limit-satoshis"))
-    if (chainHash == Block.LivenetGenesisBlock.hash) {
+    if (networkProfile == NetworkProfile.Mainnet) {
       require(dustLimitSatoshis >= Channel.MIN_DUST_LIMIT, s"dust limit must be greater than ${Channel.MIN_DUST_LIMIT}")
     }
 

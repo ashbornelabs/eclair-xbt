@@ -23,7 +23,6 @@ import akka.actor.{ActorRef, ActorSystem, Props, SupervisorStrategy, typed}
 import akka.pattern.after
 import akka.util.Timeout
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, ByteVector32, Satoshi, Script, ScriptElt, addressToPublicKeyScript}
-import fr.acinq.eclair.NodeParams.hashFromChain
 import fr.acinq.eclair.Setup.Seeds
 import fr.acinq.eclair.balance.{BalanceActor, ChannelsListener}
 import fr.acinq.eclair.blockchain._
@@ -113,8 +112,8 @@ class Setup(val datadir: File,
   val chaindir = new File(datadir, chain)
   chaindir.mkdirs()
   setOwnerPermissions(chaindir.toPath, "rwx------")
-  val nodeKeyManager = LocalNodeKeyManager(nodeSeed, NodeParams.hashFromChain(chain))
-  val channelKeyManager = LocalChannelKeyManager(channelSeed, NodeParams.hashFromChain(chain))
+  val nodeKeyManager = LocalNodeKeyManager(nodeSeed, networkProfile.lightningChainHash)
+  val channelKeyManager = LocalChannelKeyManager(channelSeed, networkProfile.lightningChainHash)
 
   /**
    * This counter holds the current blockchain height.
@@ -135,7 +134,7 @@ class Setup(val datadir: File,
   PortChecker.checkAvailable(serverBindingAddress)
 
   // load on onchain key manager if an `eclair-signer.conf` is found in Eclair's data directory
-  val onChainKeyManager_opt = LocalOnChainKeyManager.load(datadir, NodeParams.hashFromChain(chain))
+  val onChainKeyManager_opt = LocalOnChainKeyManager.load(datadir, networkProfile.lightningChainHash)
 
   val (bitcoin, bitcoinChainHash) = {
     val wallet = if (config.hasPath("bitcoind.wallet")) Some(config.getString("bitcoind.wallet")) else None
