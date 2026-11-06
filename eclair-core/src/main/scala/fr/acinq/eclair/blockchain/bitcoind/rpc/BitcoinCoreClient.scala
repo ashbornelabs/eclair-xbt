@@ -641,7 +641,7 @@ class BitcoinCoreClient(val rpcClient: BitcoinJsonRPCClient, val lockUtxos: Bool
   }
 
   def getReceivePublicKeyScript(addressType_opt: Option[AddressType] = None)(implicit ec: ExecutionContext): Future[Seq[ScriptElt]] = getReceiveAddress(addressType_opt).flatMap { address =>
-    addressToPublicKeyScript(rpcClient.chainHash, address) match {
+    addressToPublicKeyScript(rpcClient.bitcoinGenesisHash, address) match {
       case Left(f) => Future.failed(new RuntimeException(s"cannot convert $address to a public key script: ${f.getMessage}"))
       case Right(script) => Future.successful(script)
     }
@@ -653,7 +653,7 @@ class BitcoinCoreClient(val rpcClient: BitcoinJsonRPCClient, val lockUtxos: Bool
   } yield verifiedAddress
 
   def getChangePublicKeyScript(addressType_opt: Option[AddressType] = None)(implicit ec: ExecutionContext): Future[Seq[ScriptElt]] = getChangeAddress(addressType_opt).flatMap { address =>
-    addressToPublicKeyScript(rpcClient.chainHash, address) match {
+    addressToPublicKeyScript(rpcClient.bitcoinGenesisHash, address) match {
       case Left(f) => Future.failed(new RuntimeException(s"cannot convert $address to a public key script: ${f.getMessage}"))
       case Right(script) => Future.successful(script)
     }

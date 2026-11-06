@@ -23,7 +23,6 @@ import akka.actor.{ActorRef, ActorSystem, Props, SupervisorStrategy, typed}
 import akka.pattern.after
 import akka.util.Timeout
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, ByteVector32, Satoshi, Script, ScriptElt, addressToPublicKeyScript}
-import fr.acinq.eclair.NodeParams.hashFromChain
 import fr.acinq.eclair.Setup.Seeds
 import fr.acinq.eclair.balance.{BalanceActor, ChannelsListener}
 import fr.acinq.eclair.blockchain._
@@ -102,18 +101,19 @@ class Setup(val datadir: File,
   val config = system.settings.config.getConfig("eclair")
   val Seeds(nodeSeed, channelSeed) = seeds_opt.getOrElse(NodeParams.getSeeds(datadir))
   val chain = config.getString("chain")
-  val chainCheckTx = chain match {
-    case "mainnet" => Some("2157b554dcfda405233906e461ee593875ae4b1b97615872db6a25130ecc1dd6") // coinbase of #500000
-    case "testnet" => Some("5c50d460b3b98ea0c70baa0f50d1f0cc6ffa553788b4a7e23918bcdd558828fa") // coinbase of #40000 on testnet4
-    case "testnet4" => Some("5c50d460b3b98ea0c70baa0f50d1f0cc6ffa553788b4a7e23918bcdd558828fa") // coinbase of #40000
-    case "regtest" => None
+  val networkProfile = NetworkProfile.fromName(chain).getOrElse(throw new RuntimeException(s"invalid chain '$chain'"))
+  val chainCheckTx = networkProfile match {
+    case NetworkProfile.Mainnet => Some("2157b554dcfda405233906e461ee593875ae4b1b97615872db6a25130ecc1dd6") // coinbase of #500000
+    case NetworkProfile.Testnet4 => Some("5c50d460b3b98ea0c70baa0f50d1f0cc6ffa553788b4a7e23918bcdd558828fa") // coinbase of #40000 on testnet4
+    case NetworkProfile.Regtest => None
+    case _ => throw new RuntimeException(s"unsupported network profile '$networkProfile'")
   }
 
   val chaindir = new File(datadir, chain)
   chaindir.mkdirs()
   setOwnerPermissions(chaindir.toPath, "rwx------")
-  val nodeKeyManager = LocalNodeKeyManager(nodeSeed, NodeParams.hashFromChain(chain))
-  val channelKeyManager = LocalChannelKeyManager(channelSeed, NodeParams.hashFromChain(chain))
+  val nodeKeyManager = LocalNodeKeyManager(nodeSeed, networkProfile.lightningChainHash)
+  val channelKeyManager = LocalChannelKeyManager(channelSeed, networkProfile.lightningChainHash)
 
   /**
    * This counter holds the current blockchain height.
@@ -134,7 +134,7 @@ class Setup(val datadir: File,
   PortChecker.checkAvailable(serverBindingAddress)
 
   // load on onchain key manager if an `eclair-signer.conf` is found in Eclair's data directory
-  val onChainKeyManager_opt = LocalOnChainKeyManager.load(datadir, NodeParams.hashFromChain(chain))
+  val onChainKeyManager_opt = LocalOnChainKeyManager.load(datadir, networkProfile.lightningChainHash)
 
   val (bitcoin, bitcoinChainHash) = {
     val wallet = if (config.hasPath("bitcoind.wallet")) Some(config.getString("bitcoind.wallet")) else None
@@ -146,7 +146,7 @@ class Setup(val datadir: File,
       case "password" => BitcoinJsonRPCAuthMethod.UserPassword(config.getString("bitcoind.rpcuser"), config.getString("bitcoind.rpcpassword"))
     }
 
-    case class BitcoinStatus(version: Int, chainHash: BlockHash, initialBlockDownload: Boolean, verificationProgress: Double, blockCount: Long, headerCount: Long, unspentAddresses: List[String])
+    case class BitcoinStatus(version: Int, bitcoinGenesisHash: BlockHash, initialBlockDownload: Boolean, verificationProgress: Double, blockCount: Long, headerCount: Long, unspentAddresses: List[String])
 
     def getBitcoinStatus(bitcoinClient: BasicBitcoinJsonRPCClient): Future[BitcoinStatus] = for {
       json <- bitcoinClient.invoke("getblockchaininfo").recover { case e => throw BitcoinRPCConnectionException(e) }
@@ -160,7 +160,7 @@ class Setup(val datadir: File,
       blocks = (json \ "blocks").extract[Long]
       headers = (json \ "headers").extract[Long]
       // NB: bitcoind confusingly returns the blockId instead of the blockHash.
-      chainHash <- bitcoinClient.invoke("getblockhash", 0).map(_.extract[String]).map(s => BlockId(ByteVector32.fromValidHex(s))).map(BlockHash(_))
+      bitcoinGenesisHash <- bitcoinClient.invoke("getblockhash", 0).map(_.extract[String]).map(s => BlockId(ByteVector32.fromValidHex(s))).map(BlockHash(_))
       bitcoinVersion <- bitcoinClient.invoke("getnetworkinfo").map(json => json \ "version").map(_.extract[Int])
       unspentAddresses <- bitcoinClient.invoke("listunspent").recover { _ => if (wallet.isEmpty && wallets.length > 1) throw BitcoinDefaultWalletException(wallets) else throw BitcoinWalletNotLoadedException(wallet.getOrElse(""), wallets) }
         .collect { case JArray(values) =>
@@ -172,7 +172,7 @@ class Setup(val datadir: File,
         case Some(txid) => bitcoinClient.invoke("getrawtransaction", txid)
         case None => Future.successful(())
       }
-    } yield BitcoinStatus(bitcoinVersion, chainHash, ibd, progress, blocks, headers, unspentAddresses)
+    } yield BitcoinStatus(bitcoinVersion, bitcoinGenesisHash, ibd, progress, blocks, headers, unspentAddresses)
 
     def pollBitcoinStatus(bitcoinClient: BasicBitcoinJsonRPCClient): Future[BitcoinStatus] = {
       getBitcoinStatus(bitcoinClient).transformWith {
@@ -186,7 +186,7 @@ class Setup(val datadir: File,
     }
 
     val bitcoinClient = new BasicBitcoinJsonRPCClient(
-      chainHash = hashFromChain(chain),
+      bitcoinGenesisHash = networkProfile.bitcoinGenesisHash,
       rpcAuthMethod = rpcAuthMethod,
       host = config.getString("bitcoind.host"),
       port = config.getInt("bitcoind.rpcport"),
@@ -200,17 +200,18 @@ class Setup(val datadir: File,
     logger.info(s"bitcoind version=${bitcoinStatus.version}")
     assert(bitcoinStatus.version >= 310000, "Eclair requires Bitcoin Core 31 or higher")
     bitcoinStatus.unspentAddresses.foreach { address =>
-      val isSegwit = addressToPublicKeyScript(bitcoinStatus.chainHash, address).map(script => Script.isNativeWitnessScript(script)).getOrElse(false)
+      val isSegwit = addressToPublicKeyScript(bitcoinStatus.bitcoinGenesisHash, address).map(script => Script.isNativeWitnessScript(script)).getOrElse(false)
       assert(isSegwit, s"Your wallet contains non-segwit UTXOs (e.g. address=$address). You must send those UTXOs to a segwit address to use Eclair (check out our README for more details).")
     }
-    if (bitcoinStatus.chainHash != Block.RegtestGenesisBlock.hash) {
+    assert(bitcoinStatus.bitcoinGenesisHash == networkProfile.bitcoinGenesisHash, s"bitcoin genesis hash mismatch (conf=${networkProfile.bitcoinGenesisHash} != bitcoind=${bitcoinStatus.bitcoinGenesisHash})")
+    if (networkProfile != NetworkProfile.Regtest) {
       assert(!bitcoinStatus.initialBlockDownload, s"bitcoind should be synchronized (initialblockdownload=${bitcoinStatus.initialBlockDownload})")
       assert(bitcoinStatus.verificationProgress > 0.999, s"bitcoind should be synchronized (progress=${bitcoinStatus.verificationProgress})")
       assert(bitcoinStatus.headerCount - bitcoinStatus.blockCount <= 1, s"bitcoind should be synchronized (headers=${bitcoinStatus.headerCount} blocks=${bitcoinStatus.blockCount})")
     }
     logger.info(s"current blockchain height=${bitcoinStatus.blockCount}")
     blockHeight.set(bitcoinStatus.blockCount)
-    (bitcoinClient, bitcoinStatus.chainHash)
+    (bitcoinClient, bitcoinStatus.bitcoinGenesisHash)
   }
 
   val instanceId = UUID.randomUUID()
@@ -220,7 +221,7 @@ class Setup(val datadir: File,
   val nodeParams = NodeParams.makeNodeParams(config, instanceId, nodeKeyManager, channelKeyManager, onChainKeyManager_opt, initTor(), databases, blockHeight, feeratesPerKw, pluginParams)
 
   logger.info(s"nodeid=${nodeParams.nodeId} alias=${nodeParams.alias}")
-  assert(bitcoinChainHash == nodeParams.chainHash, s"chainHash mismatch (conf=${nodeParams.chainHash} != bitcoind=$bitcoinChainHash)")
+  assert(bitcoinChainHash == networkProfile.bitcoinGenesisHash, s"bitcoin genesis hash mismatch (conf=${networkProfile.bitcoinGenesisHash} != bitcoind=$bitcoinChainHash)")
   logger.info(s"using chain=$chain chainHash=${nodeParams.chainHash}")
   pluginParams.foreach(param => logger.info(s"using plugin=${param.name}"))
 

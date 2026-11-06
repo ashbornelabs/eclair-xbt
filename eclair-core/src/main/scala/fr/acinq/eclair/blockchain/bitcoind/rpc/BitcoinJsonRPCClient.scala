@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BitcoinJsonRPCClient {
   // @formatter:off  
-  def chainHash: BlockHash
+  def bitcoinGenesisHash: BlockHash
   def wallet: Option[String]
   def invoke(method: String, params: Any*)(implicit ec: ExecutionContext): Future[JValue]
   // @formatter:on

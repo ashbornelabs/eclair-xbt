@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BatchingBitcoinJsonRPCClient(rpcClient: BasicBitcoinJsonRPCClient)(implicit system: ActorSystem, ec: ExecutionContext) extends BitcoinJsonRPCClient {
   // @formatter:off
-  override def chainHash: BlockHash = rpcClient.chainHash
+  override def bitcoinGenesisHash: BlockHash = rpcClient.bitcoinGenesisHash
   override def wallet: Option[String] = rpcClient.wallet
   // @formatter:on
 

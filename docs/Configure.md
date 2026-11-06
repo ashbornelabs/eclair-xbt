@@ -6,6 +6,7 @@
   * [Changing the data directory](#changing-the-data-directory)
   * [Splitting the configuration](#splitting-the-configuration)
 * [Options reference](#options-reference)
+  * [Network identity](#network-identity)
 * [Customize features](#customize-features)
 * [Customize feerate tolerance](#customize-feerate-tolerance)
 * [Examples](#examples)
@@ -65,6 +66,21 @@ name                         | description                                      
  eclair.server.public-ips    | List of node public ip                                               | _no default_
 
 &rarr; see [`reference.conf`](https://github.com/ACINQ/eclair/blob/master/eclair-core/src/main/resources/reference.conf) for full reference. There are many more options!
+
+### Network identity
+
+Eclair keeps the Bitcoin and Lightning network identities separate through a
+network profile:
+
+* `bitcoinGenesisHash` identifies the Bitcoin chain returned by Bitcoin Core's
+  `getblockhash 0` and is used for Bitcoin Core validation and address decoding.
+* `lightningChainHash` identifies the Lightning network used in protocol
+  messages, channel state, gossip, invoices, and offers.
+
+The current profiles are `mainnet`, `testnet4`, and `regtest`. The legacy
+configuration value `testnet` is accepted as an alias for `testnet4`. XBT
+currently uses the same genesis hash for both identities, but the separate
+profile fields make the distinction explicit for future network extensions.
 
 ## Customize features
 
