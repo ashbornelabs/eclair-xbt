@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair
 
-import fr.acinq.bitcoin.scalacompat.{Btc, BtcAmount, BtcDouble, MilliBtc, Satoshi, btc2satoshi, millibtc2satoshi}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Btc, BtcAmount, BtcDouble, MilliBtc, Satoshi, btc2satoshi, millibtc2satoshi}
 
 /**
  * Created by t-bast on 22/08/2019.

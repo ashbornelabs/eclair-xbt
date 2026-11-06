@@ -21,9 +21,9 @@ import akka.actor.FSM.{CurrentState, SubscribeTransitionCallBack, Transition}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter._
 import akka.testkit.{TestFSMRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Script.{pay2wsh, write}
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Crypto, SatoshiLong, Transaction, TxOut}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Script.{pay2wsh, write}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Crypto, SatoshiLong, Transaction, TxOut}
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.{UtxoStatus, ValidateRequest, ValidateResult, WatchExternalChannelSpent}
 import fr.acinq.eclair.channel.Register.{ForwardShortId, ForwardShortIdFailure}

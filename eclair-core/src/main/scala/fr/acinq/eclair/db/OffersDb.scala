@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 import fr.acinq.eclair.TimestampMilli
 import fr.acinq.eclair.wire.protocol.OfferTypes.Offer
 

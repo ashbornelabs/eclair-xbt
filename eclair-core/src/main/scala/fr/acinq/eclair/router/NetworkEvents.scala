@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.router
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Satoshi
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Satoshi
 import fr.acinq.eclair.ShortChannelId
 import fr.acinq.eclair.RealShortChannelId
 import fr.acinq.eclair.remote.EclairInternalsSerializer.RemoteTypes

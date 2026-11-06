@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.payment.relay.Relayer.RelayFees
 import fr.acinq.eclair.wire.protocol.{NodeAddress, NodeInfo}
 import fr.acinq.eclair.{Features, InitFeature, TimestampSecond}

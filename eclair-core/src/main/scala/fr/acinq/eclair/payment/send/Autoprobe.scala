@@ -17,7 +17,7 @@
 package fr.acinq.eclair.payment.send
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.crypto.Sphinx.DecryptedFailurePacket
 import fr.acinq.eclair.payment.{Bolt11Invoice, PaymentEvent, PaymentFailed, RemoteFailure}
 import fr.acinq.eclair.router.Router

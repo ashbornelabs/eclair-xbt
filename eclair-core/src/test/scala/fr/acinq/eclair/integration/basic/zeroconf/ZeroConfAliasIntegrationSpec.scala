@@ -3,7 +3,7 @@ package fr.acinq.eclair.integration.basic.zeroconf
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import com.softwaremill.quicklens._
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features.{ScidAlias, ZeroConf}
 import fr.acinq.eclair.channel.{DATA_NORMAL, LocalFundingStatus}

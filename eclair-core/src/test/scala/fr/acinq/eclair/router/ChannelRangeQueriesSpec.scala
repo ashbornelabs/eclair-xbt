@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.router
 
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, SatoshiLong, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, SatoshiLong, TxId}
 import fr.acinq.eclair.router.Router.{ChannelMeta, PublicChannel}
 import fr.acinq.eclair.router.Sync._
 import fr.acinq.eclair.wire.protocol.QueryShortChannelIdsTlv.QueryFlagType._

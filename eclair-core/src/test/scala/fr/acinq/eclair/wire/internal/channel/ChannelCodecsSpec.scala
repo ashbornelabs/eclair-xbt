@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.wire.internal.channel
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto, DeterministicWallet, OutPoint, SatoshiLong, Transaction, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto, DeterministicWallet, OutPoint, SatoshiLong, Transaction, TxId}
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.channel.ChannelSpendSignature.IndividualSignature

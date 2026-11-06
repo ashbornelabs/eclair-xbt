@@ -19,8 +19,8 @@ package fr.acinq.eclair.channel.publish
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.{Satoshi, SatoshiLong, Transaction, TxIn, TxOut}
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Satoshi, SatoshiLong, Transaction, TxIn, TxOut}
 import fr.acinq.eclair.NotificationsLogger.NotifyNodeOperator
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient
 import fr.acinq.eclair.blockchain.fee.{FeeratePerKw, FeeratesPerKw, OnChainFeeConf}
@@ -292,11 +292,11 @@ private class ReplaceableTxFunder(replyTo: ActorRef[ReplaceableTxFunder.FundingR
   }
 
   private def signWalletInputs(tx: HasWalletInputs, locallySignedTx: Transaction, txFeerate: FeeratePerKw, walletInputs: WalletInputs): Behavior[Command] = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     // We create a PSBT with the non-wallet input already signed:
     val witnessScript = tx.redeemInfo match {
-      case redeemInfo: RedeemInfo.SegwitV0 => fr.acinq.bitcoin.Script.parse(redeemInfo.redeemScript)
+      case redeemInfo: RedeemInfo.SegwitV0 => com.ashbornelabs.bitcoin.xbt.Script.parse(redeemInfo.redeemScript)
       case _: RedeemInfo.Taproot => null
     }
     val psbt = new Psbt(locallySignedTx).updateWitnessInput(

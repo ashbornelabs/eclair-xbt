@@ -1,7 +1,7 @@
 package fr.acinq.eclair.integration.basic.zeroconf
 
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import fr.acinq.eclair.FeatureSupport.Optional
 import fr.acinq.eclair.Features.ZeroConf
 import fr.acinq.eclair.channel.ChannelTypes.AnchorOutputsZeroFeeHtlcTx

@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.payment.offer
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, ByteVector64, Crypto}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, ByteVector64, Crypto}
 import fr.acinq.eclair.payment.relay.Relayer.RelayFees
 import fr.acinq.eclair.{MilliSatoshi, TimestampSecond}
 import scodec.bits.ByteVector

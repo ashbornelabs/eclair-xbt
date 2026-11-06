@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.channel
 
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import fr.acinq.eclair.blockchain.fee.{FeeratePerByte, FeeratePerKw}
 import fr.acinq.eclair.reputation.Reputation
 import fr.acinq.eclair.transactions._

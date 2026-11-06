@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.scalacompat.Satoshi
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Satoshi
 import fr.acinq.eclair.UInt64.Conversions._
 import fr.acinq.eclair.wire.protocol.CommonCodecs.{minimalvalue, uint64, varint, varintoverflow}
 import fr.acinq.eclair.{MilliSatoshi, UInt64}

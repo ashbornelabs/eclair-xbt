@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.TestDatabases.{TestPgDatabases, TestSqliteDatabases}
 import fr.acinq.eclair._
 import fr.acinq.eclair.db.pg.PgPeersDb

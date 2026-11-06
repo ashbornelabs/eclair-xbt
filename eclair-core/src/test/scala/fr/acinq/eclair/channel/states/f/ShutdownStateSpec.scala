@@ -18,9 +18,9 @@ package fr.acinq.eclair.channel.states.f
 
 import akka.testkit.TestProbe
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.ScriptFlags
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, ByteVector64, Crypto, SatoshiLong, Script, Transaction}
+import com.ashbornelabs.bitcoin.xbt.ScriptFlags
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, ByteVector64, Crypto, SatoshiLong, Script, Transaction}
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher._
 import fr.acinq.eclair.blockchain.fee.{FeeratePerKw, FeeratesPerKw}
 import fr.acinq.eclair.blockchain.{CurrentBlockHeight, CurrentFeerates}

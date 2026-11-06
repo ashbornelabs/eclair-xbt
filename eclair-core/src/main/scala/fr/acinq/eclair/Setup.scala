@@ -22,7 +22,7 @@ import akka.actor.typed.scaladsl.adapter.{ClassicActorRefOps, ClassicActorSystem
 import akka.actor.{ActorRef, ActorSystem, Props, SupervisorStrategy, typed}
 import akka.pattern.after
 import akka.util.Timeout
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, BlockId, ByteVector32, Satoshi, Script, ScriptElt, addressToPublicKeyScript}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, ByteVector32, Satoshi, Script, ScriptElt, addressToPublicKeyScript}
 import fr.acinq.eclair.NodeParams.hashFromChain
 import fr.acinq.eclair.Setup.Seeds
 import fr.acinq.eclair.balance.{BalanceActor, ChannelsListener}

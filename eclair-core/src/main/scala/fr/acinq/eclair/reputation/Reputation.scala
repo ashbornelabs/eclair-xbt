@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.reputation
 
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.transactions.DirectedHtlc
 import fr.acinq.eclair.wire.protocol.UpdateAddHtlc

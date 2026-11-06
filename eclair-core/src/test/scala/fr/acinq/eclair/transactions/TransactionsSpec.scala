@@ -16,11 +16,11 @@
 
 package fr.acinq.eclair.transactions
 
-import fr.acinq.bitcoin.SigHash._
-import fr.acinq.bitcoin.scalacompat.Crypto.TaprootTweak.KeyPathTweak
-import fr.acinq.bitcoin.scalacompat.Crypto._
-import fr.acinq.bitcoin.scalacompat.{Btc, ByteVector32, ByteVector64, Crypto, MilliBtc, MilliBtcDouble, Musig2, OP_1, OP_2, OP_2DROP, OP_CHECKMULTISIG, OP_PUSHDATA, OP_RETURN, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut}
-import fr.acinq.bitcoin.{ScriptFlags, SigVersion}
+import com.ashbornelabs.bitcoin.xbt.SigHash._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.TaprootTweak.KeyPathTweak
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Btc, ByteVector32, ByteVector64, Crypto, MilliBtc, MilliBtcDouble, Musig2, OP_1, OP_2, OP_2DROP, OP_CHECKMULTISIG, OP_PUSHDATA, OP_RETURN, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut}
+import com.ashbornelabs.bitcoin.xbt.{ScriptFlags, SigVersion}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw

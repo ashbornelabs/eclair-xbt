@@ -19,7 +19,7 @@ package fr.acinq.eclair
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{DiagnosticLoggingAdapter, EventStream}
 import akka.testkit.{TestActor, TestProbe}
-import fr.acinq.bitcoin.scalacompat.TxId
+import com.ashbornelabs.bitcoin.xbt.scalacompat.TxId
 import fr.acinq.eclair.channel.fsm.Channel
 import fr.acinq.eclair.io.Peer
 import fr.acinq.eclair.wire.protocol.LightningMessage

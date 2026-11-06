@@ -20,8 +20,8 @@ import akka.actor.ActorSystem
 import akka.pattern.pipe
 import akka.testkit.TestProbe
 import sttp.client3.okhttp.OkHttpFutureBackend
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.{Block, Satoshi, SatoshiLong, Script, Transaction}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Satoshi, SatoshiLong, Script, Transaction}
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.ValidateResult
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinJsonRPCAuthMethod.UserPassword
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BitcoinCoreClient}

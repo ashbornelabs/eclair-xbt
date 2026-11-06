@@ -17,8 +17,8 @@
 package fr.acinq.eclair.channel.states.b
 
 import akka.testkit.{TestFSMRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.Musig2.IndividualNonce
-import fr.acinq.bitcoin.scalacompat.{Btc, ByteVector32, ByteVector64, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.IndividualNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Btc, ByteVector32, ByteVector64, SatoshiLong}
 import fr.acinq.eclair.TestConstants.{Alice, Bob}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.blockchain.SingleKeyOnChainWallet

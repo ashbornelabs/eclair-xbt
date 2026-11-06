@@ -16,11 +16,11 @@
 
 package fr.acinq.eclair.blockchain
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut}
-import fr.acinq.bitcoin.{SigVersion, ScriptFlags}
-import fr.acinq.bitcoin.SigHash.SIGHASH_ALL
-import fr.acinq.bitcoin.TxIn.SEQUENCE_FINAL
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut}
+import com.ashbornelabs.bitcoin.xbt.{SigVersion, ScriptFlags}
+import com.ashbornelabs.bitcoin.xbt.SigHash.SIGHASH_ALL
+import com.ashbornelabs.bitcoin.xbt.TxIn.SEQUENCE_FINAL
 
 /**
  * Created by PM on 27/01/2017.

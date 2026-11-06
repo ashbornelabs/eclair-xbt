@@ -20,8 +20,8 @@ import akka.actor.ActorSystem
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.pattern.after
-import fr.acinq.bitcoin.BlockHeader
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, BlockId, ByteVector32}
+import com.ashbornelabs.bitcoin.xbt.BlockHeader
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, ByteVector32}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.{BlockHeaderAt, LatestHeaders}
 import fr.acinq.eclair.blockchain.watchdogs.Monitoring.{Metrics, Tags}
 import fr.acinq.eclair.tor.Socks5ProxyParams
@@ -49,7 +49,7 @@ object ExplorerApi {
   implicit val formats: DefaultFormats = DefaultFormats
   implicit val serialization: Serialization = Serialization
 
-  import fr.acinq.bitcoin.scalacompat.KotlinUtils.scala2kmp
+  import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils.scala2kmp
 
   sealed trait Explorer {
     // @formatter:off

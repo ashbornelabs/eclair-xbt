@@ -17,8 +17,8 @@
 package fr.acinq.eclair
 
 import akka.actor.ActorRef
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Satoshi, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Satoshi, SatoshiLong}
 import fr.acinq.eclair.blockchain.fee._
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.channel.fsm.Channel.{ChannelConf, RemoteRbfLimits, UnhandledExceptionStrategy}

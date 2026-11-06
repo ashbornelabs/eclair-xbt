@@ -16,12 +16,12 @@
 
 package fr.acinq.eclair.transactions
 
-import fr.acinq.bitcoin.ScriptFlags
-import fr.acinq.bitcoin.SigHash.SIGHASH_ALL
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.Musig2.{IndividualNonce, LocalNonce, SecretNonce}
-import fr.acinq.bitcoin.scalacompat.Transaction.encodeWitnessEcdsaSig
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, ByteVector64, Crypto, KotlinUtils, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxOut}
+import com.ashbornelabs.bitcoin.xbt.ScriptFlags
+import com.ashbornelabs.bitcoin.xbt.SigHash.SIGHASH_ALL
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.{IndividualNonce, LocalNonce, SecretNonce}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Transaction.encodeWitnessEcdsaSig
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, ByteVector64, Crypto, KotlinUtils, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxOut}
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.crypto.keymanager.{ChannelKeys, CommitmentPublicKeys, LocalCommitmentKeys, RemoteCommitmentKeys}
 import fr.acinq.eclair.transactions.Transactions._
@@ -584,7 +584,7 @@ class SimpleTaprootCommitmentsTestVectorSpec extends AnyFunSuite {
     val uncompressedPublicKey = PublicKey(serialized.takeRight(33)).toUncompressedBin
     val publicKeyX = uncompressedPublicKey.drop(1).take(32).reverse
     val publicKeyY = uncompressedPublicKey.takeRight(32).reverse
-    val sec = new fr.acinq.bitcoin.crypto.musig2.SecretNonce((hex"220EDCF1" ++ serialized.take(64) ++ publicKeyX ++ publicKeyY).toArrayUnsafe)
+    val sec = new com.ashbornelabs.bitcoin.xbt.crypto.musig2.SecretNonce((hex"220EDCF1" ++ serialized.take(64) ++ publicKeyX ++ publicKeyY).toArrayUnsafe)
     SecretNonce(sec)
   }
 

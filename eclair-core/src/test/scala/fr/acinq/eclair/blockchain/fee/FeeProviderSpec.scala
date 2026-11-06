@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.blockchain.fee
 
-import fr.acinq.bitcoin.scalacompat.SatoshiLong
+import com.ashbornelabs.bitcoin.xbt.scalacompat.SatoshiLong
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw.MinimumFeeratePerKw
 import org.scalatest.funsuite.AnyFunSuite
 

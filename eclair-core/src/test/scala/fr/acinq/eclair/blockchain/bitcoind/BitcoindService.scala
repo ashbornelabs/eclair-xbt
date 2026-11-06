@@ -19,9 +19,9 @@ package fr.acinq.eclair.blockchain.bitcoind
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import akka.testkit.{TestKitBase, TestProbe}
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.{Block, Btc, BtcAmount, MilliBtc, MnemonicCode, Satoshi, Transaction, TxOut, addressToPublicKeyScript, computeP2WpkhAddress}
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Btc, BtcAmount, MilliBtc, MnemonicCode, Satoshi, Transaction, TxOut, addressToPublicKeyScript, computeP2WpkhAddress}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinJsonRPCAuthMethod.{SafeCookie, UserPassword}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BitcoinCoreClient, BitcoinJsonRPCAuthMethod, BitcoinJsonRPCClient}
 import fr.acinq.eclair.blockchain.fee.FeeratePerByte
@@ -237,7 +237,7 @@ trait BitcoindService extends Logging {
   }
 
   def sendToAddress(address: String, amount: BtcAmount): Transaction = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     val amountSat = amount match {
       case amount: Satoshi => amount
@@ -273,7 +273,7 @@ trait BitcoindService extends Logging {
   }
 
   def signTransaction(client: BitcoinCoreClient, tx: Transaction): Future[SignTransactionResponse] = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
     client.signPsbt(new Psbt(tx), tx.txIn.indices, Nil).map(p => SignTransactionResponse(p.finalTx_opt.getOrElse(p.partiallySignedTx), p.finalTx_opt.isRight))
   }
 }

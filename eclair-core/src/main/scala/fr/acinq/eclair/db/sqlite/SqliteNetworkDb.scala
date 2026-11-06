@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db.sqlite
 
-import fr.acinq.bitcoin.scalacompat.{Crypto, Satoshi, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Crypto, Satoshi, TxId}
 import fr.acinq.eclair.db.Monitoring.Metrics.withMetrics
 import fr.acinq.eclair.db.Monitoring.Tags.DbBackends
 import fr.acinq.eclair.db.NetworkDb

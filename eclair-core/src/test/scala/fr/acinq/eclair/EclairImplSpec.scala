@@ -21,8 +21,8 @@ import akka.actor.{ActorRef, Status}
 import akka.pattern.pipe
 import akka.testkit.TestProbe
 import akka.util.Timeout
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, ByteVector64, Crypto, SatoshiLong, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, ByteVector64, Crypto, SatoshiLong, TxId}
 import fr.acinq.eclair.ApiTypes.{ChannelIdentifier, ChannelNotFound}
 import fr.acinq.eclair.TestConstants._
 import fr.acinq.eclair.blockchain.DummyOnChainWallet

@@ -17,8 +17,8 @@
 package fr.acinq.eclair.db
 
 import com.softwaremill.quicklens._
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import fr.acinq.eclair.TestDatabases.{TestPgDatabases, TestSqliteDatabases}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.channel._

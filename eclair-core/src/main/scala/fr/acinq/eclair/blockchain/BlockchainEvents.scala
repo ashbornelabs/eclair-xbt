@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.blockchain
 
-import fr.acinq.bitcoin.scalacompat.{BlockId, Transaction}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockId, Transaction}
 import fr.acinq.eclair.BlockHeight
 import fr.acinq.eclair.blockchain.fee.FeeratesPerKw
 

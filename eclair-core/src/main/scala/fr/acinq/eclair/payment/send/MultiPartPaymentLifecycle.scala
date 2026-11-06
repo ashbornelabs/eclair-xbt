@@ -19,7 +19,7 @@ package fr.acinq.eclair.payment.send
 import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.{ActorRef, FSM, Props}
 import akka.event.Logging.MDC
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 import fr.acinq.eclair.channel.{HtlcOverriddenByLocalCommit, HtlcsTimedoutDownstream, HtlcsWillTimeoutUpstream, Upstream}
 import fr.acinq.eclair.db.{OutgoingPayment, OutgoingPaymentStatus}
 import fr.acinq.eclair.payment.Monitoring.{Metrics, Tags}

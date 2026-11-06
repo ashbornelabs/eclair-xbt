@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.scalacompat.BlockHash
+import com.ashbornelabs.bitcoin.xbt.scalacompat.BlockHash
 import fr.acinq.eclair.UInt64
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.wire.protocol.CommonCodecs._

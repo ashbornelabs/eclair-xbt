@@ -19,7 +19,7 @@ package fr.acinq.eclair.blockchain.bitcoind.rpc
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import fr.acinq.bitcoin.scalacompat.BlockHash
+import com.ashbornelabs.bitcoin.xbt.scalacompat.BlockHash
 import fr.acinq.eclair.KamonExt
 import fr.acinq.eclair.blockchain.Monitoring.Metrics
 import org.json4s.JsonAST

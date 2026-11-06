@@ -19,7 +19,7 @@ package fr.acinq.eclair.channel.states.e
 import akka.actor.ActorRef
 import akka.actor.typed.scaladsl.adapter.actorRefAdapter
 import akka.testkit.{TestFSMRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.{SatoshiLong, Script}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{SatoshiLong, Script}
 import fr.acinq.eclair.TestConstants.Bob
 import fr.acinq.eclair.blockchain.CurrentBlockHeight
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw

@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.channel
 
-import fr.acinq.bitcoin.scalacompat.{BlockHash, ByteVector32, Satoshi, Transaction, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockHash, ByteVector32, Satoshi, Transaction, TxId}
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.wire.protocol
 import fr.acinq.eclair.wire.protocol.{AnnouncementSignatures, InteractiveTxMessage, LiquidityAds, UpdateAddHtlc}

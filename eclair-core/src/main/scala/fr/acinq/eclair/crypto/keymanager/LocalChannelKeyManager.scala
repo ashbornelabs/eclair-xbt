@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.crypto.keymanager
 
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet._
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, DeterministicWallet}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, DeterministicWallet}
 import fr.acinq.eclair.channel.ChannelConfig
 import fr.acinq.eclair.randomLong
 import scodec.bits.ByteVector

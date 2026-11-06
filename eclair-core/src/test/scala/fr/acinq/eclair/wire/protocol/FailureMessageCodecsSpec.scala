@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, ByteVector64}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, ByteVector64}
 import fr.acinq.eclair.crypto.Hmac256
 import fr.acinq.eclair.wire.protocol.FailureMessageCodecs._
 import fr.acinq.eclair.{BlockHeight, CltvExpiry, CltvExpiryDelta, MilliSatoshiLong, ShortChannelId, TimestampSecond, TimestampSecondLong, UInt64, randomBytes32}

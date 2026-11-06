@@ -18,7 +18,7 @@ package fr.acinq.eclair.channel.states.a
 
 import akka.testkit.{TestFSMRef, TestProbe}
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong, TxId}
 import fr.acinq.eclair.TestConstants.{Alice, Bob}
 import fr.acinq.eclair.blockchain.BlockingOnChainWallet
 import fr.acinq.eclair.channel._

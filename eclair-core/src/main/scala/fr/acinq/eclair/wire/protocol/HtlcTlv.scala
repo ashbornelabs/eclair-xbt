@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Musig2.IndividualNonce
-import fr.acinq.bitcoin.scalacompat.TxId
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.IndividualNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.TxId
 import fr.acinq.eclair.UInt64
 import fr.acinq.eclair.channel.ChannelSpendSignature.PartialSignatureWithNonce
 import fr.acinq.eclair.crypto.Sphinx

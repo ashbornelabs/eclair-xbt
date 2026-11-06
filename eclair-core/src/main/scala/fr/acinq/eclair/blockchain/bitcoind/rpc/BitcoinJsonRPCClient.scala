@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.blockchain.bitcoind.rpc
 
-import fr.acinq.bitcoin.scalacompat.BlockHash
+import com.ashbornelabs.bitcoin.xbt.scalacompat.BlockHash
 import org.json4s.JsonAST.JValue
 
 import java.io.IOException

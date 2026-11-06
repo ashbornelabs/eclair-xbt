@@ -3,8 +3,8 @@ package fr.acinq.eclair.payment.send
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.{ActorRef, typed}
-import fr.acinq.bitcoin.scalacompat.ByteVector32
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.channel.Helpers.getRelayFees
 import fr.acinq.eclair.channel.Register
 import fr.acinq.eclair.crypto.Sphinx.RouteBlinding

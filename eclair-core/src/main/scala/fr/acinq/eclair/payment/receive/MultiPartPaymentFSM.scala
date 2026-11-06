@@ -18,8 +18,8 @@ package fr.acinq.eclair.payment.receive
 
 import akka.actor.{ActorRef, Props}
 import akka.event.Logging.MDC
-import fr.acinq.bitcoin.scalacompat.ByteVector32
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.payment.Monitoring.{Metrics, Tags}
 import fr.acinq.eclair.wire.protocol
 import fr.acinq.eclair.wire.protocol.{FailureMessage, IncorrectOrUnknownPaymentDetails, UpdateAddHtlc}

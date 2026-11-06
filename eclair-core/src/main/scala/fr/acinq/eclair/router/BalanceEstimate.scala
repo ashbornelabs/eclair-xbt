@@ -17,8 +17,8 @@
 package fr.acinq.eclair.router
 
 import akka.event.LoggingAdapter
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{Satoshi, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Satoshi, SatoshiLong}
 import fr.acinq.eclair.router.Graph.GraphStructure.{DirectedGraph, GraphEdge}
 import fr.acinq.eclair.router.Router.{ChannelDesc, ChannelHop, Route}
 import fr.acinq.eclair.wire.protocol.NodeAnnouncement

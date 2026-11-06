@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.blockchain
 
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.{OutPoint, Satoshi, ScriptElt, Transaction, TxId}
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{OutPoint, Satoshi, ScriptElt, Transaction, TxId}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.AddressType
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import scodec.bits.ByteVector
@@ -164,8 +164,8 @@ object OnChainWallet {
 
   final case class ProcessPsbtResponse(psbt: Psbt, complete: Boolean) {
 
-    import fr.acinq.bitcoin.psbt.UpdateFailure
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.psbt.UpdateFailure
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     /** Transaction with all available witnesses. */
     val partiallySignedTx: Transaction = {
@@ -180,7 +180,7 @@ object OnChainWallet {
 
     /** Extract a fully signed transaction if the psbt is finalized. */
     val finalTx_opt: Either[UpdateFailure, Transaction] = {
-      val extracted: Either[UpdateFailure, fr.acinq.bitcoin.Transaction] = psbt.extract()
+      val extracted: Either[UpdateFailure, com.ashbornelabs.bitcoin.xbt.Transaction] = psbt.extract()
       extracted match {
         case Left(f) => Left(f)
         case Right(tx) => Right(tx)

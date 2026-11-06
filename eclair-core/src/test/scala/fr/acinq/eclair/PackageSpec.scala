@@ -16,10 +16,10 @@
 
 package fr.acinq.eclair
 
-import fr.acinq.bitcoin.BitcoinError.ChainHashMismatch
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Crypto, Script, TxHash, TxId, addressToPublicKeyScript}
-import fr.acinq.bitcoin.{Base58, Base58Check, Bech32}
+import com.ashbornelabs.bitcoin.xbt.BitcoinError.ChainHashMismatch
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Crypto, Script, TxHash, TxId, addressToPublicKeyScript}
+import com.ashbornelabs.bitcoin.xbt.{Base58, Base58Check, Bech32}
 import org.scalatest.Tag
 import org.scalatest.funsuite.AnyFunSuite
 import scodec.bits._

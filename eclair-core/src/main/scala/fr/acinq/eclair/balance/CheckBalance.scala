@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.balance
 
-import fr.acinq.bitcoin.scalacompat.{BlockId, Btc, ByteVector32, KotlinUtils, OutPoint, Satoshi, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockId, Btc, ByteVector32, KotlinUtils, OutPoint, Satoshi, SatoshiLong}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.Utxo
 import fr.acinq.eclair.channel.Helpers.Closing

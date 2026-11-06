@@ -18,7 +18,7 @@ package fr.acinq.eclair.payment
 
 import akka.actor.typed.scaladsl.adapter.actorRefAdapter
 import akka.testkit.{TestActorRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Crypto}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Crypto}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features.{KeySend, _}
 import fr.acinq.eclair.TestConstants.Alice

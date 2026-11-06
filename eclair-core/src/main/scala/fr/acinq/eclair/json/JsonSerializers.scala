@@ -17,10 +17,10 @@
 package fr.acinq.eclair.json
 
 import com.google.common.net.HostAndPort
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet.KeyPath
-import fr.acinq.bitcoin.scalacompat.Musig2.IndividualNonce
-import fr.acinq.bitcoin.scalacompat.{BlockHash, BlockId, Btc, ByteVector32, ByteVector64, OutPoint, Satoshi, Transaction, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet.KeyPath
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.IndividualNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockHash, BlockId, Btc, ByteVector32, ByteVector64, OutPoint, Satoshi, Transaction, TxId}
 import fr.acinq.eclair.balance.CheckBalance.{DetailedOnChainBalance, GlobalBalance, OffChainBalance}
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.channel._
@@ -117,7 +117,7 @@ object ByteVector32KeySerializer extends MinimalKeySerializer({
 })
 
 object ByteVector32KmpSerializer extends MinimalSerializer({
-  case x: fr.acinq.bitcoin.ByteVector32 => JString(x.toHex)
+  case x: com.ashbornelabs.bitcoin.xbt.ByteVector32 => JString(x.toHex)
 })
 
 object TxIdSerializer extends MinimalSerializer({
@@ -129,7 +129,7 @@ object TxIdKeySerializer extends MinimalKeySerializer({
 })
 
 object TxIdKmpSerializer extends MinimalSerializer({
-  case x: fr.acinq.bitcoin.TxId => JString(x.value.toHex)
+  case x: com.ashbornelabs.bitcoin.xbt.TxId => JString(x.value.toHex)
 })
 
 object BlockIdSerializer extends MinimalSerializer({
@@ -137,7 +137,7 @@ object BlockIdSerializer extends MinimalSerializer({
 })
 
 object BlockIdKmpSerializer extends MinimalSerializer({
-  case x: fr.acinq.bitcoin.BlockId => JString(x.value.toHex)
+  case x: com.ashbornelabs.bitcoin.xbt.BlockId => JString(x.value.toHex)
 })
 
 object BlockHashSerializer extends MinimalSerializer({
@@ -145,7 +145,7 @@ object BlockHashSerializer extends MinimalSerializer({
 })
 
 object BlockHashKmpSerializer extends MinimalSerializer({
-  case x: fr.acinq.bitcoin.BlockHash => JString(x.value.toHex)
+  case x: com.ashbornelabs.bitcoin.xbt.BlockHash => JString(x.value.toHex)
 })
 
 object ByteVector64Serializer extends MinimalSerializer({

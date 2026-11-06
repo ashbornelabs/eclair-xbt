@@ -21,7 +21,7 @@ import akka.actor.typed.scaladsl.adapter.{ClassicActorSystemOps, actorRefAdapter
 import akka.pattern.pipe
 import akka.testkit.{TestFSMRef, TestProbe}
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.scalacompat.{Block, BtcAmount, MilliBtcDouble, MnemonicCode, OutPoint, SatoshiLong, Script, ScriptElt, Transaction, TxId, TxIn, TxOut, computeP2WpkhAddress}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BtcAmount, MilliBtcDouble, MnemonicCode, OutPoint, SatoshiLong, Script, ScriptElt, Transaction, TxId, TxIn, TxOut, computeP2WpkhAddress}
 import fr.acinq.eclair.NotificationsLogger.NotifyNodeOperator
 import fr.acinq.eclair.blockchain.WatcherSpec
 import fr.acinq.eclair.blockchain.bitcoind.BitcoindService
@@ -450,7 +450,7 @@ class ReplaceableTxPublisherSpec extends TestKitBaseClass with AnyFunSuiteLike w
         val aliceSig = tx.sign(aliceFundingKey, bobFundingKey.publicKey, extraUtxos)
         val bobSig = tx.sign(bobFundingKey, aliceFundingKey.publicKey, extraUtxos)
         val signedFundingInput = tx.aggregateSigs(aliceFundingKey.publicKey, bobFundingKey.publicKey, aliceSig, bobSig)
-        val sig = Transaction.signInput(signedFundingInput, 1, Script.pay2pkh(attackerKey.publicKey), fr.acinq.bitcoin.SigHash.SIGHASH_ALL, 100_000 sat, fr.acinq.bitcoin.SigVersion.SIGVERSION_WITNESS_V0, attackerKey)
+        val sig = Transaction.signInput(signedFundingInput, 1, Script.pay2pkh(attackerKey.publicKey), com.ashbornelabs.bitcoin.xbt.SigHash.SIGHASH_ALL, 100_000 sat, com.ashbornelabs.bitcoin.xbt.SigVersion.SIGVERSION_WITNESS_V0, attackerKey)
         signedFundingInput.updateWitness(1, Script.witnessPay2wpkh(attackerKey.publicKey, sig))
       }
       wallet.publishTransaction(spliceTx).pipeTo(probe.ref)

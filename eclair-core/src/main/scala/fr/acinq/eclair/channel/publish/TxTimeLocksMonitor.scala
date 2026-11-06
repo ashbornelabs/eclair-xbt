@@ -19,7 +19,7 @@ package fr.acinq.eclair.channel.publish
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
 import akka.actor.typed.{ActorRef, Behavior}
-import fr.acinq.bitcoin.scalacompat.{Transaction, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Transaction, TxId}
 import fr.acinq.eclair.blockchain.{CurrentBlockHeight, OnChainChannelFunder}
 import fr.acinq.eclair.channel.publish.TxPublisher.TxPublishContext
 import fr.acinq.eclair.transactions.Scripts

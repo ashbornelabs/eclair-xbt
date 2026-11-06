@@ -18,9 +18,9 @@ package fr.acinq.eclair.api.serde
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.util.Timeout
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Musig2.IndividualNonce
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, ByteVector64, OutPoint, Satoshi, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.IndividualNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, ByteVector64, OutPoint, Satoshi, TxId}
 import fr.acinq.eclair.api.directives.RouteFormat
 import fr.acinq.eclair.api.serde.JsonSupport._
 import fr.acinq.eclair.blockchain.fee.{ConfirmationPriority, FeeratePerByte}

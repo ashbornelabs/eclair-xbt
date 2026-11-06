@@ -19,7 +19,7 @@ package fr.acinq.eclair.blockchain.watchdogs
 import akka.actor.typed.Behavior
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.Behaviors
-import fr.acinq.bitcoin.BlockHeader
+import com.ashbornelabs.bitcoin.xbt.BlockHeader
 import fr.acinq.eclair.NotificationsLogger.NotifyNodeOperator
 import fr.acinq.eclair.blockchain.CurrentBlockHeight
 import fr.acinq.eclair.blockchain.watchdogs.Monitoring.{Metrics, Tags}

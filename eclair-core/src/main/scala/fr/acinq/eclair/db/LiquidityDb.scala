@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, TxId}
 import fr.acinq.eclair.channel.{ChannelLiquidityPurchased, LiquidityPurchase}
 import fr.acinq.eclair.payment.relay.OnTheFlyFunding
 import fr.acinq.eclair.{MilliSatoshi, TimestampMilli}

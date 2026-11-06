@@ -18,8 +18,8 @@ package fr.acinq.eclair.payment.send
 
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props, typed}
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, Crypto}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, Crypto}
 import fr.acinq.eclair.channel.Upstream
 import fr.acinq.eclair.channel.fsm.Channel
 import fr.acinq.eclair.db.PaymentType

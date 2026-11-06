@@ -16,9 +16,9 @@
 
 package fr.acinq
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PrivateKey
-import fr.acinq.bitcoin.scalacompat.KotlinUtils._
-import fr.acinq.bitcoin.scalacompat._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
+import com.ashbornelabs.bitcoin.xbt.scalacompat._
 import fr.acinq.eclair.crypto.StrongRandom
 import fr.acinq.eclair.payment.relay.Relayer.RelayFees
 import scodec.Attempt

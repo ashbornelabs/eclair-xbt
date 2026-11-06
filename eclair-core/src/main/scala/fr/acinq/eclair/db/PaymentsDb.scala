@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.ByteVector32
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
 import fr.acinq.eclair.payment._
 import fr.acinq.eclair.router.Router.{BlindedHop, ChannelHop, Hop, NodeHop}
 import fr.acinq.eclair.{MilliSatoshi, Paginated, ShortChannelId, TimestampMilli}

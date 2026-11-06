@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.crypto.keymanager
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Crypto}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Crypto}
 import fr.acinq.eclair.Setup.Seeds
 import fr.acinq.eclair.channel.ChannelConfig
 import fr.acinq.eclair.{NodeParams, TestUtils}

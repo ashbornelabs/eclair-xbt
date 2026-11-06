@@ -18,8 +18,8 @@ package fr.acinq.eclair
 
 import akka.actor.typed.ActorRef
 import akka.event.LoggingAdapter
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, OutPoint, Satoshi, TxOut}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, OutPoint, Satoshi, TxOut}
 import fr.acinq.eclair.channel.Origin
 import fr.acinq.eclair.io.OpenChannelInterceptor.OpenChannelNonInitiator
 import fr.acinq.eclair.payment.relay.PostRestartHtlcCleaner.IncomingHtlc

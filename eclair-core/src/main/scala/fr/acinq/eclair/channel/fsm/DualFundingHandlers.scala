@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.channel.fsm
 
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, Transaction, TxIn}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, Transaction, TxIn}
 import fr.acinq.eclair.NotificationsLogger
 import fr.acinq.eclair.NotificationsLogger.NotifyNodeOperator
 import fr.acinq.eclair.blockchain.{CurrentBlockHeight, NewTransaction}

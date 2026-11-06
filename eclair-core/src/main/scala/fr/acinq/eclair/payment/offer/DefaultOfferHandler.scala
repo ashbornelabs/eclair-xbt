@@ -19,7 +19,7 @@ package fr.acinq.eclair.payment.offer
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.{ActorRef, typed}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.Logs.LogCategory
 import fr.acinq.eclair.payment.offer.OfferManager.InvoiceRequestActor
 import fr.acinq.eclair.payment.relay.Relayer.RelayFees

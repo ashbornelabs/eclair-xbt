@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.payment
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto}
-import fr.acinq.bitcoin.{Base58, Base58Check, Bech32}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto}
+import com.ashbornelabs.bitcoin.xbt.{Base58, Base58Check, Bech32}
 import fr.acinq.eclair.{Bolt11Feature, CltvExpiryDelta, Feature, FeatureSupport, Features, InvoiceFeature, MilliSatoshi, MilliSatoshiLong, ShortChannelId, TimestampSecond, randomBytes32}
 import scodec.bits.{BitVector, ByteOrdering, ByteVector}
 import scodec.codecs.{list, ubyte}

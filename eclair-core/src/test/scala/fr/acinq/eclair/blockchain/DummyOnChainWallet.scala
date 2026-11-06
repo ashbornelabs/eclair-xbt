@@ -16,12 +16,12 @@
 
 package fr.acinq.eclair.blockchain
 
-import fr.acinq.bitcoin.TxIn.SEQUENCE_FINAL
-import fr.acinq.bitcoin.psbt.{KeyPathWithMaster, Psbt, TaprootBip32DerivationPath}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Crypto.TaprootTweak.KeyPathTweak
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet.KeyPath
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector64, KotlinUtils, OutPoint, Satoshi, SatoshiLong, Script, ScriptElt, ScriptWitness, Transaction, TxId, TxIn, TxOut, addressFromPublicKeyScript}
+import com.ashbornelabs.bitcoin.xbt.TxIn.SEQUENCE_FINAL
+import com.ashbornelabs.bitcoin.xbt.psbt.{KeyPathWithMaster, Psbt, TaprootBip32DerivationPath}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.TaprootTweak.KeyPathTweak
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet.KeyPath
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector64, KotlinUtils, OutPoint, Satoshi, SatoshiLong, Script, ScriptElt, ScriptWitness, Transaction, TxId, TxIn, TxOut, addressFromPublicKeyScript}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.blockchain.OnChainWallet.{FundTransactionResponse, MakeFundingTxResponse, OnChainBalance, ProcessPsbtResponse}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.AddressType
@@ -102,7 +102,7 @@ class DummyOnChainWallet extends OnChainWallet with OnChainAddressCache {
 
 class SingleKeyOnChainWallet extends OnChainWallet with OnChainAddressCache {
 
-  import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+  import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
   // We simulate a BIP84/BIP86 wallet that uses a single public key for each segwit version.
   private val keyManager = new LocalOnChainKeyManager("test-wallet", seed = randomBytes32(), walletTimestamp = TimestampSecond.now(), chainHash = Block.RegtestGenesisBlock.hash)
@@ -170,7 +170,7 @@ class SingleKeyOnChainWallet extends OnChainWallet with OnChainAddressCache {
   override def signPsbt(psbt: Psbt, ourInputs: Seq[Int], ourOutputs: Seq[Int])(implicit ec: ExecutionContext): Future[ProcessPsbtResponse] = {
     import scala.jdk.CollectionConverters.SeqHasAsJava
 
-    implicit def scala2kmpScript(input: Seq[ScriptElt]): java.util.List[fr.acinq.bitcoin.ScriptElt] = input.map(scala2kmp).asJava
+    implicit def scala2kmpScript(input: Seq[ScriptElt]): java.util.List[com.ashbornelabs.bitcoin.xbt.ScriptElt] = input.map(scala2kmp).asJava
 
     // We update all of our inputs (p2wpkh or p2tr).
     val updatedInputs = KotlinUtils.kmp2scala(psbt.global.tx).txIn.foldLeft(psbt) {

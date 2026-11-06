@@ -17,7 +17,7 @@
 package fr.acinq.eclair.channel.states.b
 
 import akka.testkit.{TestFSMRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.{ByteVector64, SatoshiLong, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector64, SatoshiLong, TxId}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.{WatchFundingConfirmed, WatchPublished, WatchPublishedTriggered}
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw

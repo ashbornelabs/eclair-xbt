@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db.jdbc
 
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 import fr.acinq.eclair.{MilliSatoshi, Paginated}
 import grizzled.slf4j.Logger
 import org.sqlite.SQLiteConnection

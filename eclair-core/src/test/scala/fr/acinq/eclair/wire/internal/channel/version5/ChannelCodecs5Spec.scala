@@ -1,6 +1,6 @@
 package fr.acinq.eclair.wire.internal.channel.version5
 
-import fr.acinq.bitcoin.scalacompat.SatoshiLong
+import com.ashbornelabs.bitcoin.xbt.scalacompat.SatoshiLong
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features.{ChannelRangeQueries, PaymentSecret, VariableLengthOnion}
 import fr.acinq.eclair.TestUtils.randomTxId

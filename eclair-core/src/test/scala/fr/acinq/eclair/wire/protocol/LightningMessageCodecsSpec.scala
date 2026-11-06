@@ -17,9 +17,9 @@
 package fr.acinq.eclair.wire.protocol
 
 import com.google.common.base.Charsets
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.Musig2.IndividualNonce
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, OutPoint, SatoshiLong, Script, ScriptWitness, Transaction, TxHash, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.IndividualNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, OutPoint, SatoshiLong, Script, ScriptWitness, Transaction, TxHash, TxId}
 import fr.acinq.eclair.FeatureSupport.Optional
 import fr.acinq.eclair.Features.DataLossProtect
 import fr.acinq.eclair.TestUtils.randomTxId

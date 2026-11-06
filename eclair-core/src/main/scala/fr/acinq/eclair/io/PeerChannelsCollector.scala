@@ -19,7 +19,7 @@ package fr.acinq.eclair.io
 import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.Logs
 import fr.acinq.eclair.channel._
 

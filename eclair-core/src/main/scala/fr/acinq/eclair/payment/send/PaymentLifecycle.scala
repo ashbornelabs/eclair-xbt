@@ -19,7 +19,7 @@ package fr.acinq.eclair.payment.send
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.{ActorRef, FSM, Props, typed}
 import akka.event.Logging.MDC
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair._
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.crypto.{Sphinx, TransportHandler}

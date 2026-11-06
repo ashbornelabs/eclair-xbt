@@ -18,8 +18,8 @@ package fr.acinq.eclair.json
 
 import akka.actor.ActorRef
 import akka.testkit.TestProbe
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, Btc, ByteVector32, ByteVector64, DeterministicWallet, OutPoint, Satoshi, SatoshiLong, Transaction, TxHash, TxId, TxOut}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Btc, ByteVector32, ByteVector64, DeterministicWallet, OutPoint, Satoshi, SatoshiLong, Transaction, TxHash, TxId, TxOut}
 import fr.acinq.eclair._
 import fr.acinq.eclair.balance.CheckBalance
 import fr.acinq.eclair.balance.CheckBalance.{GlobalBalance, MainAndHtlcBalance}
@@ -57,7 +57,7 @@ class JsonSerializersSpec extends TestKitBaseClass with AnyFunSuiteLike with Mat
     val error = intercept[org.json4s.MappingException] {
       JsonSerializers.serialization.write(map)(org.json4s.DefaultFormats)
     }
-    assert(error.msg.contains("Do not know how to serialize key of type class fr.acinq.bitcoin.scalacompat.OutPoint. Consider implementing a CustomKeySerializer."))
+    assert(error.msg.contains("Do not know how to serialize key of type class com.ashbornelabs.bitcoin.xbt.scalacompat.OutPoint. Consider implementing a CustomKeySerializer."))
 
     // but it works with our custom key serializer
     val json = JsonSerializers.serialization.write(map)(org.json4s.DefaultFormats + ByteVectorSerializer + OutPointKeySerializer)
@@ -76,7 +76,7 @@ class JsonSerializersSpec extends TestKitBaseClass with AnyFunSuiteLike with Mat
     val error = intercept[org.json4s.MappingException] {
       JsonSerializers.serialization.write(map)(org.json4s.DefaultFormats)
     }
-    assert(error.msg.contains("Do not know how to serialize key of type class fr.acinq.bitcoin.scalacompat.OutPoint. Consider implementing a CustomKeySerializer."))
+    assert(error.msg.contains("Do not know how to serialize key of type class com.ashbornelabs.bitcoin.xbt.scalacompat.OutPoint. Consider implementing a CustomKeySerializer."))
 
     // but it works with our custom key serializer
     val json = JsonSerializers.serialization.write(map)(org.json4s.DefaultFormats + TransactionSerializer + OutPointKeySerializer)

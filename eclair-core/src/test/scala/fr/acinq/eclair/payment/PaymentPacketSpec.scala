@@ -17,8 +17,8 @@
 package fr.acinq.eclair.payment
 
 import akka.actor.ActorRef
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet.ExtendedPrivateKey
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, ByteVector64, Crypto, DeterministicWallet, OutPoint, Satoshi, SatoshiLong, Transaction, TxOut}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet.ExtendedPrivateKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, ByteVector64, Crypto, DeterministicWallet, OutPoint, Satoshi, SatoshiLong, Transaction, TxOut}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features._
 import fr.acinq.eclair.TestUtils.randomTxId
