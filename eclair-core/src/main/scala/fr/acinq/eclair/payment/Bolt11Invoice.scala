@@ -32,7 +32,7 @@ import scala.util.{Failure, Success, Try}
  * Lightning Bolt 11 invoice
  * see https://github.com/lightning/bolts/blob/master/11-payment-encoding.md
  *
- * @param prefix     currency prefix; lnbc for bitcoin, lntb for bitcoin testnet, lntbs for bitcoin signet
+ * @param prefix     currency prefix; lnbc for bitcoin, lntb for XBT testnet4
  * @param amount_opt amount to pay (empty string means no amount is specified)
  * @param createdAt  invoice timestamp (UNIX format)
  * @param nodeId     id of the node emitting the invoice
@@ -118,8 +118,6 @@ object Bolt11Invoice {
 
   val prefixes = Map(
     Block.RegtestGenesisBlock.hash -> "lnbcrt",
-    Block.SignetGenesisBlock.hash -> "lntbs",
-    Block.Testnet3GenesisBlock.hash -> "lntb",
     Block.Testnet4GenesisBlock.hash -> "lntb",
     Block.LivenetGenesisBlock.hash -> "lnbc"
   )

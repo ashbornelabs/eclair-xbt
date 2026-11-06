@@ -229,7 +229,7 @@ class PeerConnectionSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike wi
     probe.send(peerConnection, PeerConnection.InitializeConnection(peer.ref, nodeParams.chainHash, nodeParams.features.initFeatures(), doSync = true, None))
     transport.expectMsgType[TransportHandler.Listener]
     transport.expectMsgType[protocol.Init]
-    transport.send(peerConnection, protocol.Init(Bob.nodeParams.features.initFeatures(), TlvStream(InitTlv.Networks(Block.LivenetGenesisBlock.hash :: Block.SignetGenesisBlock.hash :: Nil))))
+    transport.send(peerConnection, protocol.Init(Bob.nodeParams.features.initFeatures(), TlvStream(InitTlv.Networks(Block.LivenetGenesisBlock.hash :: Block.Testnet4GenesisBlock.hash :: Nil))))
     transport.expectMsgType[TransportHandler.ReadAck]
     probe.expectTerminated(transport.ref)
     origin.expectMsg(PeerConnection.ConnectionResult.InitializationFailed("incompatible networks"))

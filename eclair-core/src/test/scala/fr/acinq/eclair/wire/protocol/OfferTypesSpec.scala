@@ -66,7 +66,7 @@ class OfferTypesSpec extends AnyFunSuite {
 
   test("offer with amount and quantity") {
     val offer = Offer(TlvStream[OfferTlv](
-      OfferChains(Seq(Block.Testnet3GenesisBlock.hash)),
+      OfferChains(Seq(Block.Testnet4GenesisBlock.hash)),
       OfferAmount(50),
       OfferDescription("offer with quantity"),
       OfferIssuer("alice@bigshop.com"),
@@ -149,7 +149,7 @@ class OfferTypesSpec extends AnyFunSuite {
       val withDefaultChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.LivenetGenesisBlock.hash)))), payerKey)
       assert(withDefaultChain.isValid)
       assert(withDefaultChain.offer == offer)
-      val otherChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.Testnet3GenesisBlock.hash)))), payerKey)
+      val otherChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.Testnet4GenesisBlock.hash)))), payerKey)
       assert(!otherChain.isValid)
     }
     {

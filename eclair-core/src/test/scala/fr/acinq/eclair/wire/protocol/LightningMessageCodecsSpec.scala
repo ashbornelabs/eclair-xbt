@@ -669,9 +669,9 @@ class LightningMessageCodecsSpec extends AnyFunSuite {
     val commitmentRange = RecommendedFeeratesTlv.CommitmentFeerateRange(FeeratePerKw(253 sat), FeeratePerKw(2_000 sat))
     val testCases = Seq(
       // @formatter:off
-      RecommendedFeerates(Block.Testnet3GenesisBlock.hash, FeeratePerKw(2500 sat), FeeratePerKw(2500 sat)) -> hex"99f1 43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000 000009c4 000009c4",
-      RecommendedFeerates(Block.Testnet3GenesisBlock.hash, FeeratePerKw(5000 sat), FeeratePerKw(253 sat)) -> hex"99f1 43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000 00001388 000000fd",
-      RecommendedFeerates(Block.Testnet3GenesisBlock.hash, FeeratePerKw(10_000 sat), FeeratePerKw(1000 sat), TlvStream(fundingRange, commitmentRange)) -> hex"99f1 43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000 00002710 000003e8 01080000138800003a98 0308000000fd000007d0"
+      RecommendedFeerates(Block.Testnet4GenesisBlock.hash, FeeratePerKw(2500 sat), FeeratePerKw(2500 sat)) -> hex"99f1 43f08bdab050e35b567c864b91f47f50ae725ae2de53bcfbbaf284da00000000 000009c4 000009c4",
+      RecommendedFeerates(Block.Testnet4GenesisBlock.hash, FeeratePerKw(5000 sat), FeeratePerKw(253 sat)) -> hex"99f1 43f08bdab050e35b567c864b91f47f50ae725ae2de53bcfbbaf284da00000000 00001388 000000fd",
+      RecommendedFeerates(Block.Testnet4GenesisBlock.hash, FeeratePerKw(10_000 sat), FeeratePerKw(1000 sat), TlvStream(fundingRange, commitmentRange)) -> hex"99f1 43f08bdab050e35b567c864b91f47f50ae725ae2de53bcfbbaf284da00000000 00002710 000003e8 01080000138800003a98 0308000000fd000007d0"
       // @formatter:on
     )
     for ((expected, encoded) <- testCases) {

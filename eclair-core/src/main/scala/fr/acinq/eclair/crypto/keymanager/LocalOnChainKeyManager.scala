@@ -76,7 +76,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
 
   // Root BIP32 on-chain path: we use BIP84 (p2wpkh) paths: m/84h/{0h/1h}
   private val rootPathBIP84 = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => "84h/1h"
+    case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => "84h/1h"
     case Block.LivenetGenesisBlock.hash => "84h/0h"
     case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
   }
@@ -84,7 +84,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
 
   // Root BIP32 on-chain path: we use BIP86 (p2tr) paths: m/86h/{0h/1h}
   private val rootPathBIP86 = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => "86h/1h"
+    case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => "86h/1h"
     case Block.LivenetGenesisBlock.hash => "86h/0h"
     case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
   }
@@ -114,7 +114,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
   override def masterPubKey(account: Long, addressType: AddressType): String = addressType match {
     case AddressType.P2tr =>
       val prefix = chainHash match {
-        case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => tpub
+        case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => tpub
         case Block.LivenetGenesisBlock.hash => xpub
         case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
       }
@@ -123,7 +123,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
       DeterministicWallet.encode(accountPub, prefix)
     case AddressType.P2wpkh =>
       val prefix = chainHash match {
-        case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => vpub
+        case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => vpub
         case Block.LivenetGenesisBlock.hash => zpub
         case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
       }

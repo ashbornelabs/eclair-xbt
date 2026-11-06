@@ -104,9 +104,8 @@ class Setup(val datadir: File,
   val chain = config.getString("chain")
   val chainCheckTx = chain match {
     case "mainnet" => Some("2157b554dcfda405233906e461ee593875ae4b1b97615872db6a25130ecc1dd6") // coinbase of #500000
-    case "testnet" => Some("8f38a0dd41dc0ae7509081e262d791f8d53ed6f884323796d5ec7b0966dd3825") // coinbase of #1500000
+    case "testnet" => Some("5c50d460b3b98ea0c70baa0f50d1f0cc6ffa553788b4a7e23918bcdd558828fa") // coinbase of #40000 on testnet4
     case "testnet4" => Some("5c50d460b3b98ea0c70baa0f50d1f0cc6ffa553788b4a7e23918bcdd558828fa") // coinbase of #40000
-    case "signet" => if (config.hasPath("bitcoind.signet-check-tx") && config.getString("bitcoind.signet-check-tx").nonEmpty) Some(config.getString("bitcoind.signet-check-tx")) else None
     case "regtest" => None
   }
 
@@ -252,9 +251,9 @@ class Setup(val datadir: File,
       }
       minFeeratePerByte = FeeratePerByte(Satoshi(config.getLong("on-chain-fees.min-feerate")))
       feeProvider = nodeParams.chainHash match {
-        case Block.RegtestGenesisBlock.hash | Block.SignetGenesisBlock.hash =>
+        case Block.RegtestGenesisBlock.hash =>
           FallbackFeeProvider(ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte)
-        case Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash =>
+        case Block.Testnet4GenesisBlock.hash =>
           // On testnet, we fallback to default feerates when there aren't enough block data to estimate fees.
           val smoothFeerateWindow = config.getInt("on-chain-fees.smoothing-window")
           FallbackFeeProvider(SmoothFeeProvider(BitcoinCoreFeeProvider(bitcoin, defaultFeerates), smoothFeerateWindow) :: ConstantFeeProvider(defaultFeerates) :: Nil, minFeeratePerByte)

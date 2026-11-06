@@ -51,33 +51,33 @@ class PackageSpec extends AnyFunSuite {
 
     // p2pkh
     // valid chain
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddressTestnet, pub.hash160)) == Right(Script.pay2pkh(pub)))
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)) == Right(Script.pay2pkh(pub)))
 
     // wrong chain
-    val Left(failure) = addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160))
+    val Left(failure) = addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160))
     assert(failure.isInstanceOf[ChainHashMismatch])
 
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)).isLeft)
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)).isLeft)
     assert(addressToPublicKeyScript(Block.RegtestGenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)).isLeft)
-    assert(addressToPublicKeyScript(Block.SignetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)).isLeft)
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.PubkeyAddress, pub.hash160)).isLeft)
 
     // p2sh
     val script = Script.write(Script.pay2wpkh(pub))
 
     // valid chain
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
     assert(addressToPublicKeyScript(Block.RegtestGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
-    assert(addressToPublicKeyScript(Block.SignetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))) == Right(Script.pay2sh(script)))
 
     // wrong chain
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(script))).isLeft)
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))).isLeft)
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))).isLeft)
     assert(addressToPublicKeyScript(Block.RegtestGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))).isLeft)
-    assert(addressToPublicKeyScript(Block.SignetGenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))).isLeft)
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Base58Check.encode(Base58.Prefix.ScriptAddress, Crypto.hash160(script))).isLeft)
   }
 
   test("decode bech32 addresses") {
@@ -86,21 +86,21 @@ class PackageSpec extends AnyFunSuite {
 
     // p2wpkh
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Bech32.encodeWitnessAddress("bc", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
     assert(addressToPublicKeyScript(Block.RegtestGenesisBlock.hash, Bech32.encodeWitnessAddress("bcrt", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
-    assert(addressToPublicKeyScript(Block.SignetGenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)) == Right(Script.pay2wpkh(pub)))
 
     // wrong chain
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Bech32.encodeWitnessAddress("bc", 0, pub.hash160)).isLeft)
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Bech32.encodeWitnessAddress("bc", 0, pub.hash160)).isLeft)
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)).isLeft)
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Bech32.encodeWitnessAddress("bcrt", 0, pub.hash160)).isLeft)
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, pub.hash160)).isLeft)
 
     val script = Script.write(Script.pay2wpkh(pub))
     assert(addressToPublicKeyScript(Block.LivenetGenesisBlock.hash, Bech32.encodeWitnessAddress("bc", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
-    assert(addressToPublicKeyScript(Block.Testnet3GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
     assert(addressToPublicKeyScript(Block.RegtestGenesisBlock.hash, Bech32.encodeWitnessAddress("bcrt", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
-    assert(addressToPublicKeyScript(Block.SignetGenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
+    assert(addressToPublicKeyScript(Block.Testnet4GenesisBlock.hash, Bech32.encodeWitnessAddress("tb", 0, Crypto.sha256(script))) == Right(Script.pay2wsh(script)))
   }
 
   test("fail to decode invalid addresses") {
