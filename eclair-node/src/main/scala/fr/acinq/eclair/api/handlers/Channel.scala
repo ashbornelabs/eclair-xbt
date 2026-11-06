@@ -18,7 +18,7 @@ package fr.acinq.eclair.api.handlers
 
 import akka.http.scaladsl.server.{MalformedFormFieldRejection, Route}
 import akka.util.Timeout
-import fr.acinq.bitcoin.scalacompat.{Satoshi, Script}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Satoshi, Script}
 import fr.acinq.eclair.api.Service
 import fr.acinq.eclair.api.directives.EclairDirectives
 import fr.acinq.eclair.api.serde.FormParamExtractors._

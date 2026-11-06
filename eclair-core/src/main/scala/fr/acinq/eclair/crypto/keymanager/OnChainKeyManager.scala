@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.crypto.keymanager
 
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet.KeyPath
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet.KeyPath
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.{AddressType, Descriptors}
 
 import scala.util.Try

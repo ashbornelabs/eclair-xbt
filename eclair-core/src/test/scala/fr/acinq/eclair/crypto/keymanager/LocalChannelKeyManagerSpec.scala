@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.crypto.keymanager
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet.KeyPath
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, DeterministicWallet}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet.KeyPath
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, DeterministicWallet}
 import fr.acinq.eclair.Setup.Seeds
 import fr.acinq.eclair.channel.ChannelConfig
 import fr.acinq.eclair.crypto.ShaChain
@@ -35,8 +35,8 @@ class LocalChannelKeyManagerSpec extends AnyFunSuite {
   test("generate the same secrets from the same seed") {
     // data was generated with eclair 0.3 
     val seed = hex"17b086b228025fa8f4416324b6ba2ec36e68570ae2fc3d392520969f2a9d0c1501"
-    val nodeKeyManager = LocalNodeKeyManager(seed, Block.Testnet3GenesisBlock.hash)
-    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet3GenesisBlock.hash)
+    val nodeKeyManager = LocalNodeKeyManager(seed, Block.Testnet4GenesisBlock.hash)
+    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet4GenesisBlock.hash)
     assert(nodeKeyManager.nodeId == PublicKey(hex"02a051267759c3a149e3e72372f4e0c4054ba597ebfd0eda78a2273023667205ee"))
     val fundingKeyPath = KeyPath("m/1'/2'/3'/4'")
     val channelKeys = channelKeyManager.channelKeys(ChannelConfig(), fundingKeyPath)
@@ -63,7 +63,7 @@ class LocalChannelKeyManagerSpec extends AnyFunSuite {
   }
 
   test("deterministically derive channel keys based on channel config") {
-    val channelKeyManager = LocalChannelKeyManager(randomBytes32(), Block.Testnet3GenesisBlock.hash)
+    val channelKeyManager = LocalChannelKeyManager(randomBytes32(), Block.Testnet4GenesisBlock.hash)
     val fundingKeyPath1 = channelKeyManager.newFundingKeyPath(isChannelOpener = true)
     val fundingKeyPath2 = channelKeyManager.newFundingKeyPath(isChannelOpener = true)
     assert(fundingKeyPath1 != fundingKeyPath2)
@@ -83,7 +83,7 @@ class LocalChannelKeyManagerSpec extends AnyFunSuite {
 
   test("test vectors (testnet, funder)") {
     val seed = ByteVector.fromValidHex("17b086b228025fa8f4416324b6ba2ec36e68570ae2fc3d392520969f2a9d0c1501")
-    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet3GenesisBlock.hash)
+    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet4GenesisBlock.hash)
     val fundingKeyPath = makeFundingKeyPath(hex"be4fa97c62b9f88437a3be577b31eb48f2165c7bc252194a15ff92d995778cfb", isInitiator = true)
     val channelKeys = channelKeyManager.channelKeys(ChannelConfig.standard, fundingKeyPath)
     val fundingKey = channelKeys.fundingKey(fundingTxIndex = 0)
@@ -98,7 +98,7 @@ class LocalChannelKeyManagerSpec extends AnyFunSuite {
 
   test("test vectors (testnet, fundee)") {
     val seed = ByteVector.fromValidHex("aeb3e9b5642cd4523e9e09164047f60adb413633549c3c6189192921311894d501")
-    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet3GenesisBlock.hash)
+    val channelKeyManager = LocalChannelKeyManager(seed, Block.Testnet4GenesisBlock.hash)
     val fundingKeyPath = makeFundingKeyPath(hex"06535806c1aa73971ec4877a5e2e684fa636136c073810f190b63eefc58ca488", isInitiator = false)
     val channelKeys = channelKeyManager.channelKeys(ChannelConfig.standard, fundingKeyPath)
     val fundingKey = channelKeys.fundingKey(fundingTxIndex = 0)

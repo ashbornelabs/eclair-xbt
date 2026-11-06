@@ -21,11 +21,11 @@ import akka.actor.typed.scaladsl.adapter.TypedActorRefOps
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.event.LoggingAdapter
-import fr.acinq.bitcoin.ScriptFlags
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.Musig2.{IndividualNonce, LocalNonce}
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, LexicographicalOrdering, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxIn, TxOut}
+import com.ashbornelabs.bitcoin.xbt.ScriptFlags
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.{IndividualNonce, LocalNonce}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, LexicographicalOrdering, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxIn, TxOut}
 import fr.acinq.eclair.blockchain.OnChainChannelFunder
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.channel.ChannelSpendSignature.IndividualSignature
@@ -466,7 +466,7 @@ object InteractiveTxBuilder {
 
   /** A relative lock time on one of its inputs (see BIP 68) would let our peer delay the publication of the transaction. */
   def hasRelativeLockTime(sequence: Long): Boolean = {
-    (sequence & fr.acinq.bitcoin.TxIn.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0 && (sequence & fr.acinq.bitcoin.TxIn.SEQUENCE_LOCKTIME_MASK) != 0
+    (sequence & com.ashbornelabs.bitcoin.xbt.TxIn.SEQUENCE_LOCKTIME_DISABLE_FLAG) == 0 && (sequence & com.ashbornelabs.bitcoin.xbt.TxIn.SEQUENCE_LOCKTIME_MASK) != 0
   }
 
 }
@@ -1077,7 +1077,7 @@ private class InteractiveTxBuilder(replyTo: ActorRef[InteractiveTxBuilder.Respon
   }
 
   private def signTx(unsignedTx: SharedTransaction, remoteFundingNonce_opt: Option[IndividualNonce]): Unit = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     val tx = unsignedTx.buildUnsignedTx()
     val sharedSig_opt = fundingParams.sharedInput_opt match {

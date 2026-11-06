@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.wire.internal
 
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.wire.protocol._
 import fr.acinq.eclair.{TimestampMilli, UInt64}

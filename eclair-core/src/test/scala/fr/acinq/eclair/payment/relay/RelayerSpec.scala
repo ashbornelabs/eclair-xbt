@@ -22,7 +22,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.{TypedActorContextOps, TypedActorRefOps}
 import akka.testkit.TestKit.awaitCond
 import com.typesafe.config.ConfigFactory
-import fr.acinq.bitcoin.scalacompat.{Block, ByteVector32, Crypto, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, Crypto, TxId}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features._
 import fr.acinq.eclair._

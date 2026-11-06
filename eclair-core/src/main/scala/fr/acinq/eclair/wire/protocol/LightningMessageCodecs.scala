@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.scalacompat.ScriptWitness
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ScriptWitness
 import fr.acinq.eclair.channel.ChannelSpendSignature
 import fr.acinq.eclair.wire.Monitoring.{Metrics, Tags}
 import fr.acinq.eclair.wire.protocol.CommonCodecs._

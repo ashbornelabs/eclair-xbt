@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.wire.protocol
 
-import fr.acinq.bitcoin.Bech32
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector32}
+import com.ashbornelabs.bitcoin.xbt.Bech32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features.BasicMultiPartPayment
 import fr.acinq.eclair.crypto.Sphinx.RouteBlinding.{BlindedHop, BlindedRoute}
@@ -66,13 +66,13 @@ class OfferTypesSpec extends AnyFunSuite {
 
   test("offer with amount and quantity") {
     val offer = Offer(TlvStream[OfferTlv](
-      OfferChains(Seq(Block.Testnet3GenesisBlock.hash)),
+      OfferChains(Seq(Block.Testnet4GenesisBlock.hash)),
       OfferAmount(50),
       OfferDescription("offer with quantity"),
       OfferIssuer("alice@bigshop.com"),
       OfferQuantityMax(0),
       OfferNodeId(nodeKey.publicKey)))
-    val encoded = "lno1qgsyxjtl6luzd9t3pr62xr7eemp6awnejusgf6gw45q75vcfqqqqqqqgqyeq5ym0venx2u3qwa5hg6pqw96kzmn5d968jys3v9kxjcm9gp3xjemndphhqtnrdak3gqqkyypsmuhrtwfzm85mht4a3vcp0yrlgua3u3m5uqpc6kf7nqjz6v70qwg"
+    val encoded = "lno1qgsy8uytm2c9pc6m2e7gvju373l4ptnjtt3du5aulwa09px6qqqqqqqgqyeq5ym0venx2u3qwa5hg6pqw96kzmn5d968jys3v9kxjcm9gp3xjemndphhqtnrdak3gqqkyypsmuhrtwfzm85mht4a3vcp0yrlgua3u3m5uqpc6kf7nqjz6v70qwg"
     assert(Offer.decode(encoded).get == offer)
     assert(offer.amount.contains(50 msat))
     assert(offer.description.contains("offer with quantity"))
@@ -149,7 +149,7 @@ class OfferTypesSpec extends AnyFunSuite {
       val withDefaultChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.LivenetGenesisBlock.hash)))), payerKey)
       assert(withDefaultChain.isValid)
       assert(withDefaultChain.offer == offer)
-      val otherChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.Testnet3GenesisBlock.hash)))), payerKey)
+      val otherChain = signInvoiceRequest(request.copy(records = TlvStream(request.records.records ++ Seq(InvoiceRequestChain(Block.Testnet4GenesisBlock.hash)))), payerKey)
       assert(!otherChain.isValid)
     }
     {

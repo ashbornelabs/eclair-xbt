@@ -1,8 +1,8 @@
 package fr.acinq.eclair.blockchain.bitcoind
 
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
-import fr.acinq.bitcoin.scalacompat.Crypto.TaprootTweak.KeyPathTweak
-import fr.acinq.bitcoin.scalacompat.{Script, ScriptElt}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.TaprootTweak.KeyPathTweak
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Script, ScriptElt}
 import fr.acinq.eclair.blockchain.OnChainAddressGenerator
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.AddressType
 import fr.acinq.eclair.{TestKitBaseClass, randomKey}

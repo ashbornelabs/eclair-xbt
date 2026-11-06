@@ -16,9 +16,9 @@
 
 package fr.acinq.eclair.payment
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto}
-import fr.acinq.bitcoin.{Base58, Base58Check, Bech32}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32, ByteVector64, Crypto}
+import com.ashbornelabs.bitcoin.xbt.{Base58, Base58Check, Bech32}
 import fr.acinq.eclair.{Bolt11Feature, CltvExpiryDelta, Feature, FeatureSupport, Features, InvoiceFeature, MilliSatoshi, MilliSatoshiLong, ShortChannelId, TimestampSecond, randomBytes32}
 import scodec.bits.{BitVector, ByteOrdering, ByteVector}
 import scodec.codecs.{list, ubyte}
@@ -32,7 +32,7 @@ import scala.util.{Failure, Success, Try}
  * Lightning Bolt 11 invoice
  * see https://github.com/lightning/bolts/blob/master/11-payment-encoding.md
  *
- * @param prefix     currency prefix; lnbc for bitcoin, lntb for bitcoin testnet, lntbs for bitcoin signet
+ * @param prefix     currency prefix; lnbc for bitcoin, lntb for XBT testnet4
  * @param amount_opt amount to pay (empty string means no amount is specified)
  * @param createdAt  invoice timestamp (UNIX format)
  * @param nodeId     id of the node emitting the invoice
@@ -118,8 +118,6 @@ object Bolt11Invoice {
 
   val prefixes = Map(
     Block.RegtestGenesisBlock.hash -> "lnbcrt",
-    Block.SignetGenesisBlock.hash -> "lntbs",
-    Block.Testnet3GenesisBlock.hash -> "lntb",
     Block.Testnet4GenesisBlock.hash -> "lntb",
     Block.LivenetGenesisBlock.hash -> "lnbc"
   )

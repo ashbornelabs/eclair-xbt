@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair;
 
-import fr.acinq.bitcoin.scalacompat.Satoshi;
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Satoshi;
 
 /**
  * This class is a compile-time check that we are able to compile Java code that uses MilliSatoshi utilities.

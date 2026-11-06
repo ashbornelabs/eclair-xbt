@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.crypto
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Crypto, Protocol}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Crypto, Protocol}
 import fr.acinq.eclair.randomBytes
 import grizzled.slf4j.Logging
 import org.bouncycastle.crypto.digests.SHA256Digest

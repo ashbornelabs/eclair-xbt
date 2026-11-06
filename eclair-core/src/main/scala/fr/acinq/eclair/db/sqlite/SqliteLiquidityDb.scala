@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.db.sqlite
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, Crypto, Satoshi, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, Crypto, Satoshi, TxId}
 import fr.acinq.eclair.channel.{ChannelLiquidityPurchased, LiquidityPurchase}
 import fr.acinq.eclair.db.LiquidityDb
 import fr.acinq.eclair.db.Monitoring.Metrics.withMetrics

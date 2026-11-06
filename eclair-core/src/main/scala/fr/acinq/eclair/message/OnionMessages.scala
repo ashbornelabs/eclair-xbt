@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.message
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
 import fr.acinq.eclair.{EncodedNodeId, ShortChannelId}
 import fr.acinq.eclair.crypto.Sphinx
 import fr.acinq.eclair.io.MessageRelay.RelayPolicy

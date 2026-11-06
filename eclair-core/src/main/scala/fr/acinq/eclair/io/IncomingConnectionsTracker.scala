@@ -4,7 +4,7 @@ import akka.actor.typed.delivery.DurableProducerQueue.TimestampMillis
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair.Logs.LogCategory
 import fr.acinq.eclair.channel.ChannelReadyForPayments
 import fr.acinq.eclair.io.IncomingConnectionsTracker.Command

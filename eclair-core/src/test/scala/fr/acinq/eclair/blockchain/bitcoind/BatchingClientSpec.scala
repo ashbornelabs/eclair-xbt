@@ -18,7 +18,7 @@ package fr.acinq.eclair.blockchain.bitcoind
 
 import akka.actor.Props
 import akka.testkit.TestProbe
-import fr.acinq.bitcoin.scalacompat.Block
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Block
 import fr.acinq.eclair.TestKitBaseClass
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinJsonRPCAuthMethod.UserPassword
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BatchingClient, JsonRPCRequest, JsonRPCResponse}

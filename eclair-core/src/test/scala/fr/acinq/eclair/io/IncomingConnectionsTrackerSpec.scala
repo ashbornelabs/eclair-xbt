@@ -21,7 +21,7 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.adapter.TypedActorRefOps
 import com.typesafe.config.ConfigFactory
-import fr.acinq.bitcoin.scalacompat.Crypto
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto
 import fr.acinq.eclair.TestConstants.Alice.nodeParams
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.channel.ChannelReadyForPayments

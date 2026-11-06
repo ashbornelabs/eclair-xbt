@@ -1,8 +1,8 @@
 package fr.acinq.eclair.crypto
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.Musig2.LocalNonce
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, Musig2, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.LocalNonce
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, Musig2, TxId}
 import fr.acinq.eclair.randomBytes32
 import grizzled.slf4j.Logging
 

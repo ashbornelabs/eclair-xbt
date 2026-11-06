@@ -1,7 +1,7 @@
 package fr.acinq.eclair.integration.basic.channel
 
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.scalacompat.{ByteVector32, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import fr.acinq.eclair.channel.states.ChannelStateTestsTags
 import fr.acinq.eclair.channel.{DATA_NORMAL, LocalFundingStatus, RES_SPLICE}
 import fr.acinq.eclair.integration.basic.fixtures.MinimalNodeFixture.{getChannelData, getPeerChannels, sendPayment, spliceIn}

@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.blockchain.bitcoind.rpc
 
-import fr.acinq.bitcoin.scalacompat.BlockHash
+import com.ashbornelabs.bitcoin.xbt.scalacompat.BlockHash
 import fr.acinq.eclair.KamonExt
 import fr.acinq.eclair.blockchain.Monitoring.{Metrics, Tags}
 import fr.acinq.eclair.json._

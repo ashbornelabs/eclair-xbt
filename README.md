@@ -128,7 +128,7 @@ Here are some of the most common options:
 
 name                         | description                                                          | default value
 -----------------------------|----------------------------------------------------------------------|--------------
- eclair.chain                | Which blockchain to use: *regtest*, *testnet*, *signet* or *mainnet* | mainnet
+ eclair.chain                | Which blockchain to use: *regtest*, *testnet4* or *mainnet*          | mainnet
  eclair.server.port          | Lightning TCP port                                                   | 9735
  eclair.api.enabled          | Enable/disable the API                                               | false. By default the API is disabled. If you want to enable it, you must set a password.
  eclair.api.port             | API HTTP port                                                        | 8080
@@ -218,7 +218,7 @@ created. See [Managing Wallets](https://github.com/bitcoin/bitcoin/blob/master/d
 For Eclair, the files that you need to backup are located in your data directory. You must backup:
 
 * your seeds (`node_seed.dat` and `channel_seed.dat`)
-* your channel database (`eclair.sqlite.bak` under directory `mainnet`, `testnet`, `signet` or `regtest` depending on which chain you're running on)
+* your channel database (`eclair.sqlite.bak` under directory `mainnet`, `testnet4` or `regtest` depending on which chain you're running on)
 
 Your seeds never change once they have been created, but your channels will change whenever you receive or send payments. Eclair will
 create and maintain a snapshot of its database, named `eclair.sqlite.bak`, in your data directory, and update it when needed. This file is
@@ -274,12 +274,12 @@ You can find more details about plugins in the [eclair-plugins](https://github.c
 
 ## Testnet usage
 
-Eclair is configured to run on mainnet by default, but you can still run it on testnet (or regtest/signet): start your Bitcoin node in
- testnet mode (add `testnet=1` in `bitcoin.conf` or start with `-testnet`), and change Eclair's chain parameter and Bitcoin RPC port:
+Eclair is configured to run on mainnet by default, but you can still run it on XBT testnet4 (or regtest): start your Bitcoin node in
+ testnet4 mode (add `testnet4=1` in `bitcoin.conf` or start with `-testnet4`), and change Eclair's chain parameter and Bitcoin RPC port:
 
 ```conf
-eclair.chain=testnet
-eclair.bitcoind.rpcport=18332
+eclair.chain=testnet4
+eclair.bitcoind.rpcport=48332
 ```
 
 For regtest, add `regtest=1` in `bitcoin.conf` or start with `-regtest`, and modify `eclair.conf`:
@@ -289,16 +289,8 @@ eclair.chain = "regtest"
 eclair.bitcoind.rpcport=18443
 ```
 
-For signet, add `signet=1` in `bitcoin.conf` or start with `-signet`, and modify `eclair.conf` as follows. The `signet-check-tx` config parameter should be the txid of a transaction that exists in your signet, "" to skip this check, or if not specified, the default signet txid value will be used.
-
-```conf
-eclair.chain = "signet"
-eclair.bitcoind.rpcport=38332
-eclair.bitcoind.signet-check-tx=<txid of signet tx>
-```
-
 You may also want to take advantage of the new configuration sections in `bitcoin.conf` to manage parameters that are network specific,
-so you can easily run your Bitcoin node on both mainnet and testnet. For example you could use:
+so you can easily run your Bitcoin node on both mainnet and testnet4. For example you could use:
 
 ```conf
 server=1

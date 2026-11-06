@@ -3,7 +3,7 @@ package fr.acinq.eclair.router
 import akka.Done
 import akka.actor.ActorSystem
 import akka.testkit.{TestFSMRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.{SatoshiLong, Script, Transaction, TxOut}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{SatoshiLong, Script, Transaction, TxOut}
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher._
 import fr.acinq.eclair.channel.states.{ChannelStateTestsBase, ChannelStateTestsTags}
 import fr.acinq.eclair.channel.{CMD_CLOSE, DATA_NORMAL}

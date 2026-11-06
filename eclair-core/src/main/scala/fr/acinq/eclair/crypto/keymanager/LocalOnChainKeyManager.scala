@@ -17,10 +17,10 @@
 package fr.acinq.eclair.crypto.keymanager
 
 import com.typesafe.config.ConfigFactory
-import fr.acinq.bitcoin.psbt.Psbt
-import fr.acinq.bitcoin.scalacompat.Crypto.TaprootTweak.KeyPathTweak
-import fr.acinq.bitcoin.scalacompat.DeterministicWallet._
-import fr.acinq.bitcoin.scalacompat.{Block, BlockHash, ByteVector64, Crypto, DeterministicWallet, MnemonicCode, Satoshi, Script, computeBIP84Address}
+import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.TaprootTweak.KeyPathTweak
+import com.ashbornelabs.bitcoin.xbt.scalacompat.DeterministicWallet._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector64, Crypto, DeterministicWallet, MnemonicCode, Satoshi, Script, computeBIP84Address}
 import fr.acinq.eclair.TimestampSecond
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient.{AddressType, Descriptor, Descriptors}
 import grizzled.slf4j.Logging
@@ -76,7 +76,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
 
   // Root BIP32 on-chain path: we use BIP84 (p2wpkh) paths: m/84h/{0h/1h}
   private val rootPathBIP84 = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => "84h/1h"
+    case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => "84h/1h"
     case Block.LivenetGenesisBlock.hash => "84h/0h"
     case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
   }
@@ -84,7 +84,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
 
   // Root BIP32 on-chain path: we use BIP86 (p2tr) paths: m/86h/{0h/1h}
   private val rootPathBIP86 = chainHash match {
-    case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => "86h/1h"
+    case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => "86h/1h"
     case Block.LivenetGenesisBlock.hash => "86h/0h"
     case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
   }
@@ -114,7 +114,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
   override def masterPubKey(account: Long, addressType: AddressType): String = addressType match {
     case AddressType.P2tr =>
       val prefix = chainHash match {
-        case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => tpub
+        case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => tpub
         case Block.LivenetGenesisBlock.hash => xpub
         case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
       }
@@ -123,7 +123,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
       DeterministicWallet.encode(accountPub, prefix)
     case AddressType.P2wpkh =>
       val prefix = chainHash match {
-        case Block.RegtestGenesisBlock.hash | Block.Testnet3GenesisBlock.hash | Block.Testnet4GenesisBlock.hash | Block.SignetGenesisBlock.hash => vpub
+        case Block.RegtestGenesisBlock.hash | Block.Testnet4GenesisBlock.hash => vpub
         case Block.LivenetGenesisBlock.hash => zpub
         case _ => throw new IllegalArgumentException(s"invalid chain hash $chainHash")
       }
@@ -133,11 +133,11 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
   }
 
   override def derivePublicKey(keyPath: KeyPath): (Crypto.PublicKey, String) = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
     require(isOurKeyPath(keyPath, addressType(keyPath)), s"derivation path $keyPath is not part of our wallet: bitcoin core may be malicious")
     val pub = DeterministicWallet.derivePrivateKey(master, keyPath).publicKey
     val address = addressType(keyPath) match {
-      case AddressType.P2tr => fr.acinq.bitcoin.Bitcoin.computeBIP86Address(pub, chainHash)
+      case AddressType.P2tr => com.ashbornelabs.bitcoin.xbt.Bitcoin.computeBIP86Address(pub, chainHash)
       case AddressType.P2wpkh => computeBIP84Address(pub, chainHash)
     }
     (pub, address)
@@ -157,8 +157,8 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
       val receiveDesc = s"wpkh([$fingerPrintHex/$keyPath]${encode(accountPub, prefix)}/0/*)"
       val changeDesc = s"wpkh([$fingerPrintHex/$keyPath]${encode(accountPub, prefix)}/1/*)"
       List(
-        Descriptor(desc = s"$receiveDesc#${fr.acinq.bitcoin.Descriptor.checksum(receiveDesc)}", internal = false, active = true, timestamp = walletTimestamp.toLong),
-        Descriptor(desc = s"$changeDesc#${fr.acinq.bitcoin.Descriptor.checksum(changeDesc)}", internal = true, active = true, timestamp = walletTimestamp.toLong),
+        Descriptor(desc = s"$receiveDesc#${com.ashbornelabs.bitcoin.xbt.Descriptor.checksum(receiveDesc)}", internal = false, active = true, timestamp = walletTimestamp.toLong),
+        Descriptor(desc = s"$changeDesc#${com.ashbornelabs.bitcoin.xbt.Descriptor.checksum(changeDesc)}", internal = true, active = true, timestamp = walletTimestamp.toLong),
       )
     }
     val descriptorsBIP86 = {
@@ -170,8 +170,8 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
       val receiveDesc = s"tr([$fingerPrintHex/$keyPath]${encode(accountPub, prefix)}/0/*)"
       val changeDesc = s"tr([$fingerPrintHex/$keyPath]${encode(accountPub, prefix)}/1/*)"
       List(
-        Descriptor(desc = s"$receiveDesc#${fr.acinq.bitcoin.Descriptor.checksum(receiveDesc)}", internal = false, active = true, timestamp = walletTimestamp.toLong),
-        Descriptor(desc = s"$changeDesc#${fr.acinq.bitcoin.Descriptor.checksum(changeDesc)}", internal = true, active = true, timestamp = walletTimestamp.toLong),
+        Descriptor(desc = s"$receiveDesc#${com.ashbornelabs.bitcoin.xbt.Descriptor.checksum(receiveDesc)}", internal = false, active = true, timestamp = walletTimestamp.toLong),
+        Descriptor(desc = s"$changeDesc#${com.ashbornelabs.bitcoin.xbt.Descriptor.checksum(changeDesc)}", internal = true, active = true, timestamp = walletTimestamp.toLong),
       )
     }
     Descriptors(wallet_name = walletName, descriptors = descriptorsBIP84 ++ descriptorsBIP86)
@@ -197,21 +197,21 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
       val input = psbt.getInput(i)
       require(input != null, s"input $i is missing from psbt: bitcoin core may be malicious")
       require(input.getWitnessUtxo != null, s"input $i does not have a witness utxo: bitcoin core may be malicious")
-      fr.acinq.bitcoin.scalacompat.KotlinUtils.kmp2scala(input.getWitnessUtxo.amount)
+      com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils.kmp2scala(input.getWitnessUtxo.amount)
     }).sum
   }
 
   private def changeAmount(psbt: Psbt, ourOutputs: Seq[Int]): Try[Satoshi] = Try {
     ourOutputs.map(i => {
       require(psbt.global.tx.txOut.size() > i, s"output $i is missing from psbt: bitcoin core may be malicious")
-      fr.acinq.bitcoin.scalacompat.KotlinUtils.kmp2scala(psbt.global.tx.txOut.get(i).amount)
+      com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils.kmp2scala(psbt.global.tx.txOut.get(i).amount)
     }).sum
   }
 
   /** Check that an output belongs to us (i.e. we can recompute its public key from its bip32 path). */
   private def isOurOutput(psbt: Psbt, outputIndex: Int): Boolean = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     if (psbt.outputs.size() <= outputIndex || psbt.global.tx.txOut.size() <= outputIndex) {
       return false
@@ -269,8 +269,8 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
   }
 
   private def signPsbtInput84(psbt: Psbt, pos: Int): Psbt = {
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
-    import fr.acinq.bitcoin.{Script, SigHash}
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.{Script, SigHash}
 
     val input = psbt.getInput(pos)
     require(input != null, s"input $pos is missing from psbt: bitcoin core may be malicious")
@@ -319,8 +319,8 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
   }
 
   private def signPsbtInput86(psbt: Psbt, pos: Int): Psbt = {
-    import fr.acinq.bitcoin.SigHash
-    import fr.acinq.bitcoin.scalacompat.KotlinUtils._
+    import com.ashbornelabs.bitcoin.xbt.SigHash
+    import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
 
     val input = psbt.getInput(pos)
     require(input != null, s"input $pos is missing from psbt: bitcoin core may be malicious")

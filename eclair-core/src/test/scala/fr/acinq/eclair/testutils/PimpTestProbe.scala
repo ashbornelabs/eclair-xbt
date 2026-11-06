@@ -1,7 +1,7 @@
 package fr.acinq.eclair.testutils
 
 import akka.testkit.TestProbe
-import fr.acinq.bitcoin.scalacompat.{OutPoint, Satoshi, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{OutPoint, Satoshi, TxId}
 import fr.acinq.eclair.MilliSatoshi
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher._
 import fr.acinq.eclair.blockchain.fee.ConfirmationTarget

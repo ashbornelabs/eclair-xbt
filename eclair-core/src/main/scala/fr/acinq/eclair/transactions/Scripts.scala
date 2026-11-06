@@ -16,13 +16,13 @@
 
 package fr.acinq.eclair.transactions
 
-import fr.acinq.bitcoin.Script.LOCKTIME_THRESHOLD
-import fr.acinq.bitcoin.SigHash._
-import fr.acinq.bitcoin.TxIn.{SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_MASK, SEQUENCE_LOCKTIME_TYPE_FLAG}
-import fr.acinq.bitcoin.scalacompat.Crypto.{PublicKey, XonlyPublicKey}
-import fr.acinq.bitcoin.scalacompat.Script._
-import fr.acinq.bitcoin.scalacompat.Transaction.encodeWitnessEcdsaSig
-import fr.acinq.bitcoin.scalacompat._
+import com.ashbornelabs.bitcoin.xbt.Script.LOCKTIME_THRESHOLD
+import com.ashbornelabs.bitcoin.xbt.SigHash._
+import com.ashbornelabs.bitcoin.xbt.TxIn.{SEQUENCE_LOCKTIME_DISABLE_FLAG, SEQUENCE_LOCKTIME_MASK, SEQUENCE_LOCKTIME_TYPE_FLAG}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PublicKey, XonlyPublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Script._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Transaction.encodeWitnessEcdsaSig
+import com.ashbornelabs.bitcoin.xbt.scalacompat._
 import fr.acinq.eclair.crypto.keymanager.{CommitmentPublicKeys, LocalCommitmentKeys, RemoteCommitmentKeys}
 import fr.acinq.eclair.transactions.Transactions._
 import fr.acinq.eclair.{BlockHeight, CltvExpiry, CltvExpiryDelta}
@@ -324,7 +324,7 @@ object Scripts {
      * @param pubkey1 public key
      * @param pubkey2 public key
      * @return the aggregated public key
-     * @see [[fr.acinq.bitcoin.scalacompat.Musig2.aggregateKeys()]]
+     * @see [[com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.aggregateKeys()]]
      */
     def musig2Aggregate(pubkey1: PublicKey, pubkey2: PublicKey): XonlyPublicKey = Musig2.aggregateKeys(sort(Seq(pubkey1, pubkey2)))
 

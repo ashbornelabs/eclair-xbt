@@ -1,6 +1,6 @@
 package fr.acinq.eclair.balance
 
-import fr.acinq.bitcoin.scalacompat.SatoshiLong
+import com.ashbornelabs.bitcoin.xbt.scalacompat.SatoshiLong
 import fr.acinq.eclair.balance.CheckBalance.{MainAndHtlcBalance, OffChainBalance}
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.{apply => _, _}
 import fr.acinq.eclair.channel._

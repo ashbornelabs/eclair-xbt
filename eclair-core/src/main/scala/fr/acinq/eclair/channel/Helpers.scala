@@ -17,9 +17,9 @@
 package fr.acinq.eclair.channel
 
 import akka.event.{DiagnosticLoggingAdapter, LoggingAdapter}
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey, sha256}
-import fr.acinq.bitcoin.scalacompat.Musig2.{IndividualNonce, LocalNonce}
-import fr.acinq.bitcoin.scalacompat._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey, sha256}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.{IndividualNonce, LocalNonce}
+import com.ashbornelabs.bitcoin.xbt.scalacompat._
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.OnChainAddressCache
 import fr.acinq.eclair.blockchain.fee._

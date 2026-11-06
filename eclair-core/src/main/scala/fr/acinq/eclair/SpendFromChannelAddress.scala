@@ -1,8 +1,8 @@
 package fr.acinq.eclair
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.Musig2.{IndividualNonce, LocalNonce}
-import fr.acinq.bitcoin.scalacompat.{DeterministicWallet, Musig2, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut, addressToPublicKeyScript}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.{IndividualNonce, LocalNonce}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{DeterministicWallet, Musig2, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxIn, TxOut, addressToPublicKeyScript}
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.channel.{ChannelConfig, ChannelSpendSignature}
 import fr.acinq.eclair.transactions.Transactions._

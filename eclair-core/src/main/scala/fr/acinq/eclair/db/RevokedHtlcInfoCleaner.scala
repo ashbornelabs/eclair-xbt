@@ -19,7 +19,7 @@ package fr.acinq.eclair.db
 import akka.actor.typed.Behavior
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.scaladsl.Behaviors
-import fr.acinq.bitcoin.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
 
 import scala.concurrent.duration.FiniteDuration
 

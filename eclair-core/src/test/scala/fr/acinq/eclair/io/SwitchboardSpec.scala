@@ -4,8 +4,8 @@ import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.{Actor, ActorContext, ActorRef, Props}
 import akka.testkit.{TestActorRef, TestProbe}
 import com.softwaremill.quicklens.ModifyPimp
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{ByteVector64, Satoshi}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector64, Satoshi}
 import fr.acinq.eclair.TestConstants._
 import fr.acinq.eclair.channel.{ChannelIdAssigned, DATA_NORMAL, PersistentChannelDataWithKeys, Upstream}
 import fr.acinq.eclair.io.Peer.PeerNotFound

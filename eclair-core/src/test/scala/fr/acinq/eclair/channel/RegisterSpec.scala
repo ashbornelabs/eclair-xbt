@@ -3,8 +3,8 @@ package fr.acinq.eclair.channel
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.{ActorRef, PoisonPill}
 import akka.testkit.{TestActorRef, TestProbe}
-import fr.acinq.bitcoin.scalacompat.ByteVector32
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import fr.acinq.eclair._
 import fr.acinq.eclair.io.PeerCreated
 import org.scalatest.funsuite.FixtureAnyFunSuiteLike

@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.Block
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Block
 import fr.acinq.eclair._
 import fr.acinq.eclair.wire.protocol.OfferTypes.Offer
 import org.scalatest.funsuite.AnyFunSuite

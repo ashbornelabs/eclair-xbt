@@ -16,8 +16,8 @@
 
 package fr.acinq.eclair.crypto.keymanager
 
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.scalacompat.{Crypto, DeterministicWallet, Protocol}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Crypto, DeterministicWallet, Protocol}
 import fr.acinq.eclair.channel.ChannelConfig
 
 import java.io.ByteArrayInputStream

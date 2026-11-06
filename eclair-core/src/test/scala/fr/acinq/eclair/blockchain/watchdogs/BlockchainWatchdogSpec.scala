@@ -19,7 +19,7 @@ package fr.acinq.eclair.blockchain.watchdogs
 import akka.actor.testkit.typed.scaladsl.{ScalaTestWithActorTestKit, TestProbe}
 import akka.actor.typed.eventstream.EventStream
 import com.typesafe.config.ConfigFactory
-import fr.acinq.bitcoin.scalacompat.Block
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Block
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.{DangerousBlocksSkew, WrappedCurrentBlockHeight}
 import fr.acinq.eclair.tor.Socks5ProxyParams
 import fr.acinq.eclair.{BlockHeight, NodeParams, TestConstants, TestTags}
@@ -34,11 +34,11 @@ class BlockchainWatchdogSpec extends ScalaTestWithActorTestKit(ConfigFactory.loa
   // blockcypher.com is very flaky - it either imposes rate limits or requires captcha
   // but sometimes it works. If want to check whether you're lucky uncomment these lines:
   //  val nodeParamsLivenet = TestConstants.Alice.nodeParams.copy(chainHash = Block.LivenetGenesisBlock.hash)
-  //  val nodeParamsTestnet = TestConstants.Alice.nodeParams.copy(chainHash = Block.Testnet3GenesisBlock.hash)
+  //  val nodeParamsTestnet = TestConstants.Alice.nodeParams.copy(chainHash = Block.Testnet4GenesisBlock.hash)
   // and comment these:
   val nodeParamsLivenet = removeBlockcypher(TestConstants.Alice.nodeParams.copy(chainHash = Block.LivenetGenesisBlock.hash))
-  val nodeParamsTestnet = removeBlockcypher(TestConstants.Alice.nodeParams.copy(chainHash = Block.Testnet3GenesisBlock.hash))
-  val nodeParamsSignet = removeBlockcypher(TestConstants.Alice.nodeParams.copy(chainHash = Block.SignetGenesisBlock.hash))
+  val nodeParamsTestnet = removeBlockcypher(TestConstants.Alice.nodeParams.copy(chainHash = Block.Testnet4GenesisBlock.hash))
+  val nodeParamsTestnet4 = removeBlockcypher(TestConstants.Alice.nodeParams.copy(chainHash = Block.Testnet4GenesisBlock.hash))
 
 
   test("fetch block headers from four sources on mainnet", TestTags.ExternalApi) {
@@ -76,10 +76,10 @@ class BlockchainWatchdogSpec extends ScalaTestWithActorTestKit(ConfigFactory.loa
     testKit.stop(watchdog)
   }
 
-  test("fetch block headers from one source on signet", TestTags.ExternalApi) {
+  test("fetch block headers from one source on testnet4", TestTags.ExternalApi) {
     val eventListener = TestProbe[DangerousBlocksSkew]()
     system.eventStream ! EventStream.Subscribe(eventListener.ref)
-    val watchdog = testKit.spawn(BlockchainWatchdog(nodeParamsSignet, 1 second))
+    val watchdog = testKit.spawn(BlockchainWatchdog(nodeParamsTestnet4, 1 second))
     watchdog ! WrappedCurrentBlockHeight(BlockHeight(5000))
 
     val event = eventListener.expectMessageType[DangerousBlocksSkew]

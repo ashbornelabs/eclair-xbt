@@ -3,7 +3,7 @@ package fr.acinq.eclair.blockchain.bitcoind
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors, TimerScheduler}
-import fr.acinq.bitcoin.scalacompat.{Script, ScriptElt}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Script, ScriptElt}
 import fr.acinq.eclair.blockchain.OnChainAddressGenerator
 
 import java.util.concurrent.atomic.AtomicReference

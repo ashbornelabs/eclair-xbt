@@ -1,6 +1,6 @@
 package fr.acinq.eclair
 
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 
 /** Identifying information for a remote node, used in blinded paths and onion contents. */
 sealed trait EncodedNodeId

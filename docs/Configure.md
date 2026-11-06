@@ -50,7 +50,7 @@ Here are some of the most common options:
 
 name                         | description                                                          | default value
 -----------------------------|----------------------------------------------------------------------|--------------
- eclair.chain                | Which blockchain to use: *regtest*, *testnet*, *signet* or *mainnet* | mainnet
+ eclair.chain                | Which blockchain to use: *regtest*, *testnet4* or *mainnet*          | mainnet
  eclair.server.port          | Lightning TCP port                                                   | 9735
  eclair.api.port             | API HTTP port                                                        | 8080
  eclair.api.enabled          | Enables the JSON API                                                 | false

@@ -17,8 +17,8 @@
 package fr.acinq.eclair
 
 import com.typesafe.config.{Config, ConfigFactory}
-import fr.acinq.bitcoin.scalacompat.Crypto.PublicKey
-import fr.acinq.bitcoin.scalacompat.{Block, SatoshiLong}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, SatoshiLong}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
 import fr.acinq.eclair.Features._
 import fr.acinq.eclair.TestConstants.feeratePerKw
@@ -39,8 +39,8 @@ class StartupSpec extends AnyFunSuite {
   def makeNodeParamsWithDefaults(conf: Config): NodeParams = {
     val blockCount = new AtomicLong(0)
     val feerates = new AtomicReference(FeeratesPerKw.single(feeratePerKw))
-    val nodeKeyManager = LocalNodeKeyManager(randomBytes32(), chainHash = Block.Testnet3GenesisBlock.hash)
-    val channelKeyManager = LocalChannelKeyManager(randomBytes32(), chainHash = Block.Testnet3GenesisBlock.hash)
+    val nodeKeyManager = LocalNodeKeyManager(randomBytes32(), chainHash = Block.Testnet4GenesisBlock.hash)
+    val channelKeyManager = LocalChannelKeyManager(randomBytes32(), chainHash = Block.Testnet4GenesisBlock.hash)
     val db = TestDatabases.inMemoryDb()
     NodeParams.makeNodeParams(conf, UUID.fromString("01234567-0123-4567-89ab-0123456789ab"), nodeKeyManager, channelKeyManager, None, None, db, blockCount, feerates)
   }

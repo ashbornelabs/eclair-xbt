@@ -18,8 +18,8 @@ package fr.acinq.eclair.blockchain.watchdogs
 
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import com.typesafe.config.ConfigFactory
-import fr.acinq.bitcoin.scalacompat.Block
-import fr.acinq.bitcoin.BlockHeader
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Block
+import com.ashbornelabs.bitcoin.xbt.BlockHeader
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.{BlockHeaderAt, LatestHeaders}
 import fr.acinq.eclair.blockchain.watchdogs.HeadersOverDns.CheckLatestHeaders
 import fr.acinq.eclair.{BlockHeight, TestTags}
@@ -57,7 +57,7 @@ class HeadersOverDnsSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("a
   }
 
   test("ignore testnet requests", TestTags.ExternalApi) {
-    val headersOverDns = testKit.spawn(HeadersOverDns(Block.Testnet3GenesisBlock.hash, BlockHeight(500000)))
+    val headersOverDns = testKit.spawn(HeadersOverDns(Block.Testnet4GenesisBlock.hash, BlockHeight(500000)))
     val sender = testKit.createTestProbe[LatestHeaders]()
     headersOverDns ! CheckLatestHeaders(sender.ref)
     sender.expectNoMessage(1 second)

@@ -16,7 +16,7 @@
 
 package fr.acinq.eclair.db
 
-import fr.acinq.bitcoin.scalacompat.{Crypto, SatoshiLong, TxId}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Crypto, SatoshiLong, TxId}
 import fr.acinq.eclair.TestDatabases.forAllDbs
 import fr.acinq.eclair.channel.{ChannelLiquidityPurchased, LiquidityPurchase, Upstream}
 import fr.acinq.eclair.payment.relay.OnTheFlyFunding

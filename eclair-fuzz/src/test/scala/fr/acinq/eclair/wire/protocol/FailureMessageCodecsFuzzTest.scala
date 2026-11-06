@@ -2,7 +2,7 @@ package fr.acinq.eclair.wire.protocol
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.junit.FuzzTest
-import fr.acinq.bitcoin.scalacompat.Protocol
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Protocol
 import fr.acinq.eclair.wire.protocol.FailureMessageCodecs.failureMessageCodec
 import scodec.bits.ByteVector
 

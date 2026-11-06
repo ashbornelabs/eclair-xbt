@@ -16,14 +16,14 @@
 
 package fr.acinq.eclair.transactions
 
-import fr.acinq.bitcoin.ScriptFlags
-import fr.acinq.bitcoin.SigHash._
-import fr.acinq.bitcoin.SigVersion._
-import fr.acinq.bitcoin.scalacompat.Crypto.{PrivateKey, PublicKey, TaprootTweak, XonlyPublicKey}
-import fr.acinq.bitcoin.scalacompat.KotlinUtils._
-import fr.acinq.bitcoin.scalacompat.Musig2.{IndividualNonce, LocalNonce}
-import fr.acinq.bitcoin.scalacompat.Transaction.encodeWitnessEcdsaSig
-import fr.acinq.bitcoin.scalacompat._
+import com.ashbornelabs.bitcoin.xbt.ScriptFlags
+import com.ashbornelabs.bitcoin.xbt.SigHash._
+import com.ashbornelabs.bitcoin.xbt.SigVersion._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey, TaprootTweak, XonlyPublicKey}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils._
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Musig2.{IndividualNonce, LocalNonce}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.Transaction.encodeWitnessEcdsaSig
+import com.ashbornelabs.bitcoin.xbt.scalacompat._
 import fr.acinq.eclair._
 import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.channel.ChannelSpendSignature
