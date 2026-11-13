@@ -55,10 +55,6 @@ jobs:
     - name: Configure OS settings
       run: echo "fs.file-max = 1024000" | sudo tee -a /etc/sysctl.conf
 
-    # NB: we exclude external API tests from the CI, because we don't want our build to fail because a dependency is failing.
-    # This means we won't automatically catch changes in external APIs, but developers should regularly run the test suite locally so in practice it shouldn't be a problem.
+    # This PR check validates compilation and packaging. The XBT Knots regression workflow runs the test suite.
     - name: Build with Maven
-      run: ./mvnw package -DskipTests && ./mvnw scoverage:report -DtagsToExclude=external-api -Daether.artifactResolver.postProcessor.trustedChecksums=false
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      run: ./mvnw package -DskipTests
