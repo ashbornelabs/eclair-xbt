@@ -16,7 +16,7 @@ If you want parts of the application to log at the `DEBUG` logging level, you wi
 eclair-node.sh -Dakka.loglevel=DEBUG -Dlogback.configurationFile=/path/to/logback-custom.xml
 ```
 
-You can find the default `logback.xml` file [here](https://github.com/ACINQ/eclair/blob/master/eclair-node/src/main/resources/logback.xml). It logs everything more serious than `INFO` to a rolling file.
+You can find the default `logback.xml` file [here](../eclair-node/src/main/resources/logback.xml). It logs everything more serious than `INFO` to a rolling file.
 
 If you want to debug an issue, you can change the root logger's log level to `DEBUG`:
 
