@@ -10,6 +10,16 @@ object BlockHeaderParser {
   val LegacySerializedSize = 80
   val Version2SerializedSize = 164
 
+  /** Expected serialized size, determined from the version flag in the wire header. */
+  def expectedSize(bytes: Array[Byte]): Either[String, Int] = {
+    if (bytes.length < 4) {
+      Left(s"block header is truncated: expected at least 4 bytes, got ${bytes.length}")
+    } else {
+      val versionOnWire = readUInt32LittleEndian(bytes)
+      Right(if ((versionOnWire & BlockHeaderV2.VERSION_FLAG) != 0) Version2SerializedSize else LegacySerializedSize)
+    }
+  }
+
   /**
    * Parse exactly one serialized block header.
    *
@@ -18,13 +28,9 @@ object BlockHeaderParser {
    * accidentally parse a header with trailing or truncated bytes.
    */
   def parse(bytes: Array[Byte]): Either[String, BlockHeader] = {
-    if (bytes.length < 4) {
-      Left(s"block header is truncated: expected at least 4 bytes, got ${bytes.length}")
-    } else {
-      val versionOnWire = readUInt32LittleEndian(bytes)
-      val expectedSize = if ((versionOnWire & BlockHeaderV2.VERSION_FLAG) != 0) Version2SerializedSize else LegacySerializedSize
-      if (bytes.length != expectedSize) {
-        Left(s"invalid block header length: expected $expectedSize bytes, got ${bytes.length}")
+    expectedSize(bytes).flatMap { size =>
+      if (bytes.length != size) {
+        Left(s"invalid block header length: expected $size bytes, got ${bytes.length}")
       } else {
         Try(BlockHeader.read(bytes)).toEither.left.map { error =>
           Option(error.getMessage).getOrElse(error.getClass.getSimpleName)

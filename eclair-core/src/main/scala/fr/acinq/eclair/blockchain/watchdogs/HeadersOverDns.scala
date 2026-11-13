@@ -24,6 +24,7 @@ import akka.io.dns.{AAAARecord, DnsProtocol}
 import akka.io.{Dns, IO}
 import com.ashbornelabs.bitcoin.xbt.BlockHeader
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash}
+import fr.acinq.eclair.blockchain.BlockHeaderParser
 import fr.acinq.eclair.BlockHeight
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.BlockHeaderAt
 import fr.acinq.eclair.blockchain.watchdogs.Monitoring.{Metrics, Tags}
@@ -134,14 +135,29 @@ object HeadersOverDns {
         .map(_.tail) // the first byte is a prefix that we must ignore
         .sortBy(_.head) // the second byte is a 0-indexed order byte
         .flatMap(_.tail) // the remaining bytes contain the header chunks
-      if (data.length < 81) {
+      if (data.length < 5) {
         log.error("bitcoinheaders.net response did not contain a 1-byte version followed by a block header: {}", ByteVector(data).toHex)
         None
       } else if (data.head != 0x01) {
         log.error("bitcoinheaders.net response is not using version 1: version={}", data.head)
         None
       } else {
-        Some(BlockHeader.read(data.tail.take(80).toArray))
+        val serializedHeader = data.tail.toArray
+        BlockHeaderParser.expectedSize(serializedHeader) match {
+          case Left(error) =>
+            log.error("bitcoinheaders.net returned an invalid block header: {}", error)
+            None
+          case Right(expectedSize) if serializedHeader.length < expectedSize =>
+            log.error("bitcoinheaders.net returned a truncated block header: expected {} bytes, got {}", expectedSize, serializedHeader.length)
+            None
+          case Right(expectedSize) =>
+            BlockHeaderParser.parse(serializedHeader.take(expectedSize)) match {
+              case Left(error) =>
+                log.error("bitcoinheaders.net returned an invalid block header: {}", error)
+                None
+              case Right(header) => Some(header)
+            }
+        }
       }
     } else {
       // When the block height is unknown, bitcoinheaders returns an empty response.
