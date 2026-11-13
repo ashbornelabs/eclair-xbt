@@ -33,6 +33,7 @@ object KnotsCompatibilityProfile {
   /** RPC methods needed by Eclair's startup Bitcoin Core preflight. */
   val RequiredStartupRpcMethods: Set[String] = Set(
     "getblockchaininfo",
+    "getdeploymentinfo",
     "getblockhash",
     "getnetworkinfo",
     "getrawtransaction",

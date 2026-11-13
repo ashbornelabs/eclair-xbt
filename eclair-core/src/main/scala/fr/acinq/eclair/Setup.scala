@@ -147,7 +147,7 @@ class Setup(val datadir: File,
       case "password" => BitcoinJsonRPCAuthMethod.UserPassword(config.getString("bitcoind.rpcuser"), config.getString("bitcoind.rpcpassword"))
     }
 
-    case class BitcoinStatus(version: Int, bitcoinCoreChain: String, bitcoinGenesisHash: BlockHash, initialBlockDownload: Boolean, verificationProgress: Double, blockCount: Long, headerCount: Long, unspentAddresses: List[String])
+    case class BitcoinStatus(version: Int, bitcoinCoreChain: String, bitcoinGenesisHash: BlockHash, knotsNodeCapabilities: KnotsNodeCapabilities, initialBlockDownload: Boolean, verificationProgress: Double, blockCount: Long, headerCount: Long, unspentAddresses: List[String])
 
     def invokeRequired(bitcoinClient: BasicBitcoinJsonRPCClient, method: String, params: Any*): Future[JValue] = {
       require(knotsCompatibilityProfile.requiredRpcMethods.contains(method), s"RPC method '$method' is not declared by the Knots compatibility profile")
@@ -170,7 +170,10 @@ class Setup(val datadir: File,
       headers = (json \ "headers").extract[Long]
       // NB: bitcoind confusingly returns the blockId instead of the blockHash.
       bitcoinGenesisHash <- invokeRequired(bitcoinClient, "getblockhash", 0).map(_.extract[String]).map(s => BlockId(ByteVector32.fromValidHex(s))).map(BlockHash(_))
-      bitcoinVersion <- invokeRequired(bitcoinClient, "getnetworkinfo").map(json => json \ "version").map(_.extract[Int])
+      networkInfo <- invokeRequired(bitcoinClient, "getnetworkinfo")
+      bitcoinVersion = (networkInfo \ "version").extract[Int]
+      deploymentInfo <- invokeRequired(bitcoinClient, "getdeploymentinfo")
+      knotsNodeCapabilities = KnotsNodeCapabilities.fromRpc(networkInfo, deploymentInfo)
       unspentAddresses <- invokeRequired(bitcoinClient, "listunspent").recover { _ => if (wallet.isEmpty && wallets.length > 1) throw BitcoinDefaultWalletException(wallets) else throw BitcoinWalletNotLoadedException(wallet.getOrElse(""), wallets) }
         .collect { case JArray(values) =>
           values
@@ -181,7 +184,7 @@ class Setup(val datadir: File,
         case Some(txid) => invokeRequired(bitcoinClient, "getrawtransaction", txid)
         case None => Future.successful(())
       }
-    } yield BitcoinStatus(bitcoinVersion, bitcoinCoreChain, bitcoinGenesisHash, ibd, progress, blocks, headers, unspentAddresses)
+    } yield BitcoinStatus(bitcoinVersion, bitcoinCoreChain, bitcoinGenesisHash, knotsNodeCapabilities, ibd, progress, blocks, headers, unspentAddresses)
 
     def pollBitcoinStatus(bitcoinClient: BasicBitcoinJsonRPCClient): Future[BitcoinStatus] = {
       getBitcoinStatus(bitcoinClient).transformWith {
@@ -207,6 +210,7 @@ class Setup(val datadir: File,
       await(getBitcoinStatus(bitcoinClient), 30 seconds, "bitcoind did not respond after 30 seconds")
     }
     logger.info(s"bitcoind version=${bitcoinStatus.version}")
+    logger.debug("XBT/Knots RPC capabilities: " + bitcoinStatus.knotsNodeCapabilities)
     assert(bitcoinStatus.version >= 310000, "Eclair requires Bitcoin Core 31 or higher")
     require(bitcoinStatus.bitcoinCoreChain == knotsCompatibilityProfile.networkProfile.bitcoinCoreChain,
       s"incompatible Bitcoin Core chain (expected=${knotsCompatibilityProfile.networkProfile.bitcoinCoreChain} != bitcoind=${bitcoinStatus.bitcoinCoreChain})")
