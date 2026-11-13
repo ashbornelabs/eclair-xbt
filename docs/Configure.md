@@ -85,22 +85,30 @@ profile fields make the distinction explicit for future network extensions.
 
 ### XBT Knots compatibility
 
-At startup, Eclair selects the XBT consensus profile derived from the pinned
-Bitcoin Knots reference implementation. It validates Bitcoin Core's reported
-chain and genesis hash, then invokes the required startup RPC methods:
+At startup, Eclair requires an XBT-compatible Bitcoin Knots node and selects the
+XBT consensus profile for `eclair.chain`. It validates the reported chain and
+genesis hash, the Knots marker in `getnetworkinfo`, and the BLAKE2b and
+reduced-data deployment schedule reported by `getdeploymentinfo`. A standard
+Bitcoin Core node is rejected, even when it reports the same chain and genesis
+hash.
+
+Eclair also invokes these required startup RPC methods:
 
 * `getblockchaininfo`
+* `getdeploymentinfo`
 * `getblockhash`
 * `getnetworkinfo`
 * `getrawtransaction`
 * `listwallets`
 * `listunspent`
 
-The Bitcoin Core version check is supplementary: compatibility is determined
-by the active chain profile, consensus parameters, genesis identity, and RPC
-behavior rather than by a version string alone. Regtest keeps the BLAKE2b fork
-unscheduled by default, matching Knots; custom activation heights are reserved
-for the dedicated Regtest compatibility tests.
+Compatibility is determined by the selected XBT profile, reported consensus
+schedule, genesis identity, Knots software marker, and required RPC behavior; it
+does not depend on a Bitcoin Core release-number threshold. Regtest keeps the
+BLAKE2b fork and reduced-data deployment unscheduled by default, matching Knots.
+The current `getdeploymentinfo` RPC does not expose the BLAKE2b target shift, so
+Eclair uses the target shift pinned in its selected XBT profile and cannot
+compare that value with the running node through startup RPC.
 
 ## Customize features
 
