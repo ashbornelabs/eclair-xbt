@@ -151,33 +151,7 @@ Note, that bitcoind should be configured to use Tor as well (https://en.bitcoin.
 
 ### Blockchain watchdogs
 
-Eclair version 0.5.0 introduced blockchain watchdogs, that fetch bitcoin headers from various sources in
-order to detect whether the node is being eclipsed. Eclair supports four sources at the moment:
-
-* blockchainheaders.net
-* blockcypher.com
-* blockstream.info
-* mempool.space
-
-Once `eclair.socks5.enabled` is set to `true` blockchain watchdogs connect to their respective sources over Tor.
-
-The most Tor-friendly sources are `blockstream.info` and `mempool.space` since they have native onion endpoints for their APIs.
-
-Tor support for `blockchainheaders.net` is not implemented (yet), so it gets automatically disabled when `eclair.socks5.enabled = true` to protect user's privacy.
-
-`blockcypher.com` can be flaky when used over Tor. It imposes rate limits and sometimes (rather often in fact) requires solving CAPTCHA.
-If you experience similar troubles with `blockcypher.com` use this config parameter to disable it:
-
-```
-eclair.blockchain-watchdog.sources = [
-  "bitcoinheaders.net",
-  "blockstream.info",
-  "mempool.space"
-]
-```
-
-Also, you can disable Tor for all watchdog sources altogether using:
-
-```
-eclair.socks5.use-for-watchdogs = false
-```
+The XBT fork does not query the Bitcoin header services used by upstream Eclair:
+those services do not follow the XBT chain after it diverges. External blockchain
+watchdogs are disabled until an XBT-compatible independent header source is
+available. Tor settings do not enable those Bitcoin-only sources.
