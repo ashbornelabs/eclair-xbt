@@ -77,12 +77,7 @@ object TestConstants {
     // @formatter:on
   }
 
-  private val blockchainWatchdogSources = Seq(
-    "bitcoinheaders.net",
-    "blockcypher.com",
-    "blockstream.info",
-    "mempool.space"
-  )
+  private val blockchainWatchdogSources = Seq.empty[String]
 
   object Alice {
     val seed: ByteVector32 = ByteVector32(hex"b4acd47335b25ab7b84b8c020997b12018592bb4631b868762154d77fa8b93a3") // 02aaaa...
