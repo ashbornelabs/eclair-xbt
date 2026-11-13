@@ -43,6 +43,7 @@ class KnotsCompatibilityProfileSpec extends AnyFunSuite {
   test("profiles declare the startup RPC capability set") {
     val expected = Set(
       "getblockchaininfo",
+      "getdeploymentinfo",
       "getblockhash",
       "getnetworkinfo",
       "getrawtransaction",

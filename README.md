@@ -15,7 +15,7 @@ Other implementations include [core lightning](https://github.com/ElementsProjec
 * [JSON API](#json-api)
 * [Documentation](#documentation)
 * [Installation](#installation)
-  * [Prerequisite: Bitcoin Core](#prerequisite-bitcoin-core)
+  * [Prerequisite: XBT Knots](#prerequisite-xbt-knots)
   * [Installing Eclair](#installing-eclair)
 * [Configuration](#configuration)
   * [Configuration file](#configuration-file)
@@ -52,19 +52,19 @@ You will also find detailed [guides](./docs/Guides.md) and [frequently asked que
 
 ## Installation
 
-### Prerequisite: Bitcoin Core
+### Prerequisite: XBT Knots
 
-Eclair relies on Bitcoin Core to interface with and monitor the blockchain and to manage on-chain funds: Eclair does not include an on-chain wallet, channel opening transactions are funded by your Bitcoin Core node, and channel closing transactions return funds to your Bitcoin Core node.
+This XBT Eclair fork requires an XBT-compatible [Bitcoin Knots](https://github.com/bitcoinknots/bitcoin) node to interface with and monitor the blockchain and manage on-chain funds. Eclair does not include an on-chain wallet: channel opening transactions are funded by the Knots wallet, and channel closing transactions return funds to that wallet.
 
-This means that instead of re-implementing them, Eclair benefits from the verifications and optimisations (including fee management with RBF/CPFP, ...) that are implemented by Bitcoin Core. Eclair uses our own [bitcoin library](https://github.com/ACINQ/bitcoin-kmp) to verify data provided by Bitcoin Core.
+Eclair relies on the node's on-chain verification and transaction management, and uses the XBT Bitcoin library to verify data provided by the node.
 
-:warning: This also means that Eclair has strong requirements on how your Bitcoin Core node is configured (see below), and that you must back up your Bitcoin Core wallet as well as your Eclair node (see [here](#configure-bitcoin-core-wallet)):
+:warning: At startup, Eclair checks the node's Knots identity, selected XBT network, genesis hash, and advertised BLAKE2b activation and reduced-data schedule. A standard Bitcoin Core node is rejected. Back up the Knots wallet as well as your Eclair node (see [here](#configure-bitcoin-core-wallet)).
 
-* Eclair needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ [Bitcoin Core](https://github.com/bitcoin/bitcoin) node.
+* Eclair needs a _synchronized_, _segwit-ready_, **_zeromq-enabled_**, _wallet-enabled_, _non-pruning_, _tx-indexing_ XBT Knots node.
 * You must configure your Bitcoin node to use `bech32` or `bech32m` (segwit) addresses. If your wallet has "non-segwit UTXOs" (outputs that are neither `p2sh-segwit`, `bech32` or `bech32m`), you must send them to a `bech32` or `bech32m` address before running Eclair.
-* Eclair requires Bitcoin Core 31 or higher. If you are upgrading an existing wallet, you may need to create a new address and send all your funds to that address.
+* Eclair checks the XBT Knots RPC methods and consensus schedule at startup; it does not use a Bitcoin Core release-number check as a substitute for XBT compatibility.
 
-Run bitcoind with the following minimal `bitcoin.conf`:
+Run `bitcoind` from the XBT Knots distribution with the following minimal `bitcoin.conf`:
 
 ```conf
 server=1
