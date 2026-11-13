@@ -23,6 +23,22 @@ case class KnotsNodeCapabilities(subversion: String,
                                  rdtsExpiryTime_opt: Option[Long]) {
   /** Knots adds this marker to the local subversion returned by getnetworkinfo. */
   def isKnotsBuild: Boolean = subversion.contains("Knots:")
+
+  /** Return every mismatch between the node's advertised fork schedule and the selected XBT profile. */
+  def compatibilityErrors(profile: KnotsCompatibilityProfile): Seq[String] = {
+    val expectedBlake2bHeight_opt =
+      if (profile.consensus.blake2bHeight == Int.MaxValue) None else Some(profile.consensus.blake2bHeight.toLong)
+    val expectedRdtsHeight_opt = expectedBlake2bHeight_opt
+    val expectedRdtsExpiryTime_opt =
+      if (profile.consensus.rdtsExpiryTime == Long.MinValue) None else Some(profile.consensus.rdtsExpiryTime)
+
+    Seq(
+      Option.when(!isKnotsBuild)(s"node subversion does not identify a Knots build (subversion=$subversion)"),
+      Option.when(blake2bActivationHeight_opt != expectedBlake2bHeight_opt)(s"BLAKE2b activation height mismatch (expected=$expectedBlake2bHeight_opt, bitcoind=$blake2bActivationHeight_opt)"),
+      Option.when(rdtsActivationHeight_opt != expectedRdtsHeight_opt)(s"reduced-data activation height mismatch (expected=$expectedRdtsHeight_opt, bitcoind=$rdtsActivationHeight_opt)"),
+      Option.when(rdtsExpiryTime_opt != expectedRdtsExpiryTime_opt)(s"reduced-data expiry time mismatch (expected=$expectedRdtsExpiryTime_opt, bitcoind=$rdtsExpiryTime_opt)")
+    ).flatten
+  }
 }
 
 object KnotsNodeCapabilities {

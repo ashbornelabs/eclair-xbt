@@ -22,8 +22,8 @@ import com.ashbornelabs.bitcoin.xbt.ConsensusParams
  *
  * This policy is intentionally separate from the Bitcoin Core node version:
  * compatibility depends on the active chain profile and its consensus rules,
- * not only on the software's reported version number. Runtime validation is
- * added separately once these policy values are wired into startup.
+ * not only on the software's reported version number. Eclair checks the node's
+ * Knots identity and reported fork schedule against this policy during startup.
  */
 case class KnotsCompatibilityProfile(networkProfile: NetworkProfile,
                                      consensus: ConsensusParams,

@@ -211,7 +211,6 @@ class Setup(val datadir: File,
     }
     logger.info(s"bitcoind version=${bitcoinStatus.version}")
     logger.debug("XBT/Knots RPC capabilities: " + bitcoinStatus.knotsNodeCapabilities)
-    assert(bitcoinStatus.version >= 310000, "Eclair requires Bitcoin Core 31 or higher")
     require(bitcoinStatus.bitcoinCoreChain == knotsCompatibilityProfile.networkProfile.bitcoinCoreChain,
       s"incompatible Bitcoin Core chain (expected=${knotsCompatibilityProfile.networkProfile.bitcoinCoreChain} != bitcoind=${bitcoinStatus.bitcoinCoreChain})")
     bitcoinStatus.unspentAddresses.foreach { address =>
@@ -220,6 +219,9 @@ class Setup(val datadir: File,
     }
     require(bitcoinStatus.bitcoinGenesisHash == knotsCompatibilityProfile.networkProfile.bitcoinGenesisHash,
       s"bitcoin genesis hash mismatch (conf=${knotsCompatibilityProfile.networkProfile.bitcoinGenesisHash} != bitcoind=${bitcoinStatus.bitcoinGenesisHash})")
+    val knotsCompatibilityErrors = bitcoinStatus.knotsNodeCapabilities.compatibilityErrors(knotsCompatibilityProfile)
+    require(knotsCompatibilityErrors.isEmpty,
+      s"bitcoind is not compatible with the selected XBT/Knots profile '${knotsCompatibilityProfile.networkProfile.name}': ${knotsCompatibilityErrors.mkString("; ")}")
     logger.info(s"using XBT consensus profile: blake2bHeight=${knotsCompatibilityProfile.consensus.blake2bHeight}, targetShift=${knotsCompatibilityProfile.consensus.blake2bTargetShift}, rdtsExpiryTime=${knotsCompatibilityProfile.consensus.rdtsExpiryTime}")
     if (networkProfile != NetworkProfile.Regtest) {
       assert(!bitcoinStatus.initialBlockDownload, s"bitcoind should be synchronized (initialblockdownload=${bitcoinStatus.initialBlockDownload})")
