@@ -270,7 +270,7 @@ Here is how to run Eclair with plugins:
 eclair-node-<version>/bin/eclair-node.sh <plugin1.jar> <plugin2.jar> <...>
 ```
 
-You can find more details about plugins in the [eclair-plugins](https://github.com/ACINQ/eclair-plugins) repository.
+Plugins from upstream Eclair are not guaranteed to support this XBT-only fork. Check each plugin's compatibility before using it with an XBT node.
 
 ## Testnet usage
 
