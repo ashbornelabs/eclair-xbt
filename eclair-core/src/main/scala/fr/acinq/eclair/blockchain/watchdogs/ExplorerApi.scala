@@ -22,6 +22,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.pattern.after
 import com.ashbornelabs.bitcoin.xbt.BlockHeader
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, ByteVector32}
+import fr.acinq.eclair.blockchain.BlockHeaderParser
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.{BlockHeaderAt, LatestHeaders}
 import fr.acinq.eclair.blockchain.watchdogs.Monitoring.{Metrics, Tags}
 import fr.acinq.eclair.tor.Socks5ProxyParams
@@ -38,6 +39,7 @@ import java.time.OffsetDateTime
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import scodec.bits.ByteVector
 
 /**
  * Created by t-bast on 12/10/2020.
@@ -175,6 +177,19 @@ object ExplorerApi {
   sealed trait Esplora extends Explorer {
     implicit val sb: SttpBackend[Future, _]
 
+    private def getHeader(baseUri: Uri, blockId: String, height: Long)(implicit ec: ExecutionContext): Future[BlockHeaderAt] =
+      basicRequest.readTimeout(10 seconds).get(baseUri.addPath("block", blockId, "header"))
+        .response(asStringAlways)
+        .send(sb)
+        .map { response =>
+          val rawHeader = response.body.trim
+          val serializedHeader = ByteVector.fromValidHex(rawHeader).toArray
+          BlockHeaderParser.parse(serializedHeader) match {
+            case Right(header) => BlockHeaderAt(BlockHeight(height), header)
+            case Left(error) => throw new IllegalArgumentException(s"invalid block header for block $blockId at height $height: $error")
+          }
+        }
+
     override def getLatestHeaders(baseUri: Uri, currentBlockHeight: BlockHeight)(implicit context: ActorContext[Command]): Future[LatestHeaders] = {
       implicit val ec: ExecutionContext = context.system.executionContext
       for {
@@ -186,17 +201,11 @@ object ExplorerApi {
             case StatusCode.NotFound => Seq.empty
             case _ => r.body.fold(exc => throw exc, jvalue => jvalue).arr
           })
-          .map(blocks => blocks.map(block => {
+          .flatMap(blocks => Future.sequence(blocks.map(block => {
             val JInt(height) = block \ "height"
-            val JInt(version) = block \ "version"
-            val JInt(time) = block \ "timestamp"
-            val JInt(bits) = block \ "bits"
-            val JInt(nonce) = block \ "nonce"
-            val previousBlockId = (block \ "previousblockhash").extractOpt[String].map(h => BlockId(ByteVector32.fromValidHex(h))).getOrElse(BlockId(ByteVector32.Zeroes))
-            val merkleRoot = (block \ "merkle_root").extractOpt[String].map(ByteVector32.fromValidHex(_).reverse).getOrElse(ByteVector32.Zeroes)
-            val header = new BlockHeader(version.toLong, BlockHash(previousBlockId), merkleRoot, time.toLong, bits.toLong, nonce.toLong)
-            BlockHeaderAt(BlockHeight(height.toLong), header)
-          }))
+            val JString(blockId) = block \ "id"
+            getHeader(baseUri, blockId, height.toLong)
+          })))
           .map(headers => LatestHeaders(currentBlockHeight, headers.filter(_.blockHeight >= currentBlockHeight).toSet, name))
       } yield headers
     }
