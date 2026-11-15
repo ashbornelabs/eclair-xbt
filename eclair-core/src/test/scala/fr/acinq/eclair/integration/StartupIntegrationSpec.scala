@@ -18,6 +18,7 @@ package fr.acinq.eclair.integration
 
 import akka.testkit.TestProbe
 import com.typesafe.config.{Config, ConfigFactory}
+import fr.acinq.eclair.blockchain.NetworkProfile
 import fr.acinq.eclair.blockchain.bitcoind.BitcoindService.BitcoinReq
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{Error, JsonRPCError}
 import fr.acinq.eclair.{BitcoinDefaultWalletException, BitcoinWalletDisabledException, BitcoinWalletNotLoadedException, TestUtils}
@@ -38,6 +39,11 @@ class StartupIntegrationSpec extends IntegrationSpec {
       case Some(wallet) => ConfigFactory.parseMap(Map("eclair.bitcoind.wallet" -> wallet).asJava).withFallback(defaultConfig)
       case None => defaultConfig.withoutPath("eclair.bitcoind.wallet")
     }
+  }
+
+  test("start Eclair with the XBT Knots Regtest profile") {
+    instantiateEclairNode("XBT", createConfig(wallet_opt = Some(defaultWallet)))
+    assert(nodes("XBT").nodeParams.chainHash == NetworkProfile.Regtest.lightningChainHash)
   }
 
   test("no bitcoind wallet configured and one wallet loaded") {
