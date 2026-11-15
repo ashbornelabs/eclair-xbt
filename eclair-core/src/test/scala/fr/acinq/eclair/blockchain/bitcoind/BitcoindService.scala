@@ -22,6 +22,7 @@ import akka.testkit.{TestKitBase, TestProbe}
 import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Btc, BtcAmount, MilliBtc, MnemonicCode, Satoshi, Transaction, TxOut, addressToPublicKeyScript, computeP2WpkhAddress}
+import fr.acinq.eclair.blockchain.{KnotsCompatibilityProfile, KnotsNodeCapabilities}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinJsonRPCAuthMethod.{SafeCookie, UserPassword}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BitcoinCoreClient, BitcoinJsonRPCAuthMethod, BitcoinJsonRPCClient}
 import fr.acinq.eclair.blockchain.fee.FeeratePerByte
@@ -180,6 +181,22 @@ trait BitcoindService extends Logging {
     logger.info(s"generating initial blocks to wallet=$defaultWallet...")
     generateBlocks(150)
     awaitCond(currentBlockHeight(sender) >= BlockHeight(150), max = 3 minutes, interval = 2 second)
+  }
+
+  /** Start the pinned XBT Knots binary and verify its Regtest consensus schedule. */
+  def startXbtKnotsRegtest(): KnotsNodeCapabilities = {
+    startBitcoind(defaultAddressType_opt = Some("bech32m"), changeAddressType_opt = Some("bech32m"))
+    waitForBitcoindReady()
+
+    val sender = TestProbe()
+    sender.send(bitcoincli, BitcoinReq("getnetworkinfo"))
+    val networkInfo = sender.expectMsgType[JValue](10 seconds)
+    sender.send(bitcoincli, BitcoinReq("getdeploymentinfo"))
+    val deploymentInfo = sender.expectMsgType[JValue](10 seconds)
+    val capabilities = KnotsNodeCapabilities.fromRpc(networkInfo, deploymentInfo)
+    val errors = capabilities.compatibilityErrors(KnotsCompatibilityProfile.Regtest)
+    require(errors.isEmpty, s"incompatible XBT Knots Regtest node: ${errors.mkString("; ")}")
+    capabilities
   }
 
   def createEclairBackedWallet(bitcoinClient: BitcoinJsonRPCClient, keyManager: OnChainKeyManager): Unit = {
