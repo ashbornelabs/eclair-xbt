@@ -124,8 +124,7 @@ abstract class IntegrationSpec extends TestKitBaseClass with BitcoindService wit
   implicit val formats: Formats = DefaultFormats
 
   override def beforeAll(): Unit = {
-    startBitcoind(defaultAddressType_opt = Some("bech32m"))
-    waitForBitcoindReady()
+    startXbtKnotsRegtest()
   }
 
   override def afterAll(): Unit = {

@@ -25,6 +25,7 @@ import com.softwaremill.quicklens.ModifyPimp
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Btc, MilliBtcDouble, OutPoint, SatoshiLong, Script, Transaction, TxId, TxOut}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.blockchain.OnChainWallet.{FundTransactionResponse, MakeFundingTxResponse}
+import fr.acinq.eclair.blockchain.bitcoind.BitcoindService.BitcoinReq
 import fr.acinq.eclair.blockchain.WatcherSpec._
 import fr.acinq.eclair.blockchain.bitcoind.BitcoindService.SignTransactionResponse
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher._
@@ -34,6 +35,7 @@ import fr.acinq.eclair.blockchain.fee.FeeratePerKw
 import fr.acinq.eclair.blockchain.{CurrentBlockHeight, NewTransaction}
 import fr.acinq.eclair.{BlockHeight, RealShortChannelId, TestConstants, TestKitBaseClass, randomKey}
 import grizzled.slf4j.Logging
+import org.json4s.JsonAST.{JString, JValue}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
 
@@ -50,8 +52,7 @@ class ZmqWatcherSpec extends TestKitBaseClass with AnyFunSuiteLike with Bitcoind
 
   override def beforeAll(): Unit = {
     logger.info("starting bitcoind")
-    startBitcoind()
-    waitForBitcoindReady()
+    startXbtKnotsRegtest()
     logger.info("starting zmq actors")
     val (zmqBlockConnected, zmqTxConnected) = (Promise[Done](), Promise[Done]())
     zmqBlock = system.actorOf(Props(new ZMQActor(s"tcp://127.0.0.1:$bitcoindZmqBlockPort", ZMQActor.Topics.HashBlock, Some(zmqBlockConnected))))
@@ -242,6 +243,36 @@ class ZmqWatcherSpec extends TestKitBaseClass with AnyFunSuiteLike with Bitcoind
 
       watcher ! ListWatches(probe.ref)
       assert(probe.expectMsgType[Set[Watch[_]]].isEmpty)
+    })
+  }
+
+  test("recheck transaction confirmations after an XBT Regtest reorg") {
+    withWatcher(f => {
+      import f._
+
+      val address = getNewAddress(probe)
+      val tx = sendToAddress(address, Btc(0.5), probe)
+      watcher ! WatchFundingConfirmed(probe.ref, tx.txid, minDepth = 2)
+      watcher ! ListWatches(probe.ref)
+      assert(probe.expectMsgType[Set[Watch[_]]].exists {
+        case watch: WatchFundingConfirmed => watch.txId == tx.txid
+        case _ => false
+      })
+
+      generateBlocks(1)
+      probe.expectNoMessage(100 millis)
+
+      val invalidatedHeight = currentBlockHeight(probe).toLong
+      probe.send(bitcoincli, BitcoinReq("getblockhash", invalidatedHeight))
+      val JString(invalidatedBlockHash) = probe.expectMsgType[JValue]
+      probe.send(bitcoincli, BitcoinReq("invalidateblock", invalidatedBlockHash))
+      probe.expectMsgType[JValue]
+
+      // The replacement block must not be treated as an additional confirmation for the invalidated block.
+      generateBlocks(1)
+      probe.expectNoMessage(100 millis)
+      generateBlocks(1)
+      assert(probe.expectMsgType[WatchFundingConfirmedTriggered](10 seconds).tx.txid == tx.txid)
     })
   }
 

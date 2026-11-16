@@ -22,6 +22,7 @@ import akka.testkit.{TestKitBase, TestProbe}
 import com.ashbornelabs.bitcoin.xbt.psbt.Psbt
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PrivateKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, Btc, BtcAmount, MilliBtc, MnemonicCode, Satoshi, Transaction, TxOut, addressToPublicKeyScript, computeP2WpkhAddress}
+import fr.acinq.eclair.blockchain.{KnotsCompatibilityProfile, KnotsNodeCapabilities}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinJsonRPCAuthMethod.{SafeCookie, UserPassword}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.{BasicBitcoinJsonRPCClient, BitcoinCoreClient, BitcoinJsonRPCAuthMethod, BitcoinJsonRPCClient}
 import fr.acinq.eclair.blockchain.fee.FeeratePerByte
@@ -180,6 +181,43 @@ trait BitcoindService extends Logging {
     logger.info(s"generating initial blocks to wallet=$defaultWallet...")
     generateBlocks(150)
     awaitCond(currentBlockHeight(sender) >= BlockHeight(150), max = 3 minutes, interval = 2 second)
+  }
+
+  /** Start the pinned XBT Knots binary and verify its Regtest consensus schedule. */
+  def startXbtKnotsRegtest(): KnotsNodeCapabilities = {
+    startBitcoind(defaultAddressType_opt = Some("bech32m"), changeAddressType_opt = Some("bech32m"))
+    waitForBitcoindReady()
+
+    val sender = TestProbe()
+    sender.send(bitcoincli, BitcoinReq("getnetworkinfo"))
+    val networkInfo = sender.expectMsgType[JValue](10 seconds)
+    sender.send(bitcoincli, BitcoinReq("getdeploymentinfo"))
+    val deploymentInfo = sender.expectMsgType[JValue](10 seconds)
+    val capabilities = KnotsNodeCapabilities.fromRpc(networkInfo, deploymentInfo)
+    val errors = capabilities.compatibilityErrors(KnotsCompatibilityProfile.Regtest)
+    require(errors.isEmpty, s"incompatible XBT Knots Regtest node: ${errors.mkString("; ")}")
+    capabilities
+  }
+
+  /** Start Knots with a test-only BLAKE2b activation height for activation-boundary integration tests. */
+  def startXbtKnotsRegtestWithBlake2bActivation(activationHeight: Int): KnotsNodeCapabilities = {
+    require(activationHeight > 150, "activation must be after the 150 blocks mined during Regtest initialization")
+    startBitcoind(
+      defaultAddressType_opt = Some("bech32m"),
+      changeAddressType_opt = Some("bech32m"),
+      startupFlags = s"-testactivationheight=blake2b@$activationHeight"
+    )
+    waitForBitcoindReady()
+
+    val sender = TestProbe()
+    sender.send(bitcoincli, BitcoinReq("getnetworkinfo"))
+    val networkInfo = sender.expectMsgType[JValue](10 seconds)
+    sender.send(bitcoincli, BitcoinReq("getdeploymentinfo"))
+    val deploymentInfo = sender.expectMsgType[JValue](10 seconds)
+    val capabilities = KnotsNodeCapabilities.fromRpc(networkInfo, deploymentInfo)
+    require(capabilities.isKnotsBuild, s"expected XBT Knots, got ${capabilities.subversion}")
+    require(capabilities.blake2bActivationHeight_opt.contains(activationHeight.toLong), s"unexpected BLAKE2b activation height: ${capabilities.blake2bActivationHeight_opt}")
+    capabilities
   }
 
   def createEclairBackedWallet(bitcoinClient: BitcoinJsonRPCClient, keyManager: OnChainKeyManager): Unit = {
