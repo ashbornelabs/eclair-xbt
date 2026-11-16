@@ -1,13 +1,15 @@
 package fr.acinq.eclair.blockchain.bitcoind
 
 import akka.Done
-import akka.actor.{ActorRef, Props}
+import akka.actor.typed.scaladsl.adapter.{ClassicActorSystemOps, TypedActorRefOps, actorRefAdapter}
+import akka.actor.{ActorRef, Props, typed}
 import akka.pattern.pipe
 import akka.testkit.TestProbe
 import com.softwaremill.quicklens.ModifyPimp
-import com.ashbornelabs.bitcoin.xbt.BlockHeader
-import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockId, Btc}
+import com.ashbornelabs.bitcoin.xbt.{Block => KmpBlock, BlockHeader}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block => ScalaBlock, BlockId, Btc}
 import fr.acinq.eclair.blockchain.CurrentBlockHeight
+import fr.acinq.eclair.blockchain.bitcoind.BitcoindService.BitcoinReq
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.{WatchFundingConfirmed, WatchFundingConfirmedTriggered}
 import fr.acinq.eclair.blockchain.bitcoind.rpc.BitcoinCoreClient
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor
@@ -50,7 +52,7 @@ class ActivatedKnotsZmqWatcherSpec extends TestKitBaseClass with AnyFunSuiteLike
     bitcoinClient.getBlockId(height).pipeTo(probe.ref)
     val blockId = probe.expectMsgType[BlockId](10 seconds)
     bitcoinClient.getBlock(blockId).pipeTo(probe.ref)
-    val block = probe.expectMsgType[Block](10 seconds)
+    val block = probe.expectMsgType[KmpBlock](10 seconds)
     BlockHeader.write(block.header).length
   }
 
@@ -61,9 +63,9 @@ class ActivatedKnotsZmqWatcherSpec extends TestKitBaseClass with AnyFunSuiteLike
     system.eventStream.subscribe(heights.ref, classOf[CurrentBlockHeight])
     val bitcoinClient = new BitcoinCoreClient(bitcoinrpcclient)
     val nodeParams = TestConstants.Alice.nodeParams
-      .modify(_.chainHash).setTo(Block.RegtestGenesisBlock.hash)
+      .modify(_.chainHash).setTo(ScalaBlock.RegtestGenesisBlock.hash)
       .modify(_.channelConf.scanPreviousBlocksDepth).setTo(0)
-    val watcher = system.spawn(ZmqWatcher(nodeParams, blockCount, bitcoinClient), UUID.randomUUID().toString)
+    val watcher: typed.ActorRef[ZmqWatcher.Command] = system.spawn(ZmqWatcher(nodeParams, blockCount, bitcoinClient), UUID.randomUUID().toString)
 
     try {
       assert(heights.expectMsgType[CurrentBlockHeight].blockHeight == BlockHeight(150))
@@ -94,7 +96,7 @@ class ActivatedKnotsZmqWatcherSpec extends TestKitBaseClass with AnyFunSuiteLike
       assert(heights.expectMsgType[CurrentBlockHeight].blockHeight == BlockHeight(blake2bActivationHeight + 1))
       assert(probe.expectMsgType[WatchFundingConfirmedTriggered](10 seconds).tx.txid == tx.txid)
     } finally {
-      system.stop(watcher)
+      system.stop(watcher.ref.toClassic)
       system.eventStream.unsubscribe(heights.ref, classOf[CurrentBlockHeight])
     }
   }

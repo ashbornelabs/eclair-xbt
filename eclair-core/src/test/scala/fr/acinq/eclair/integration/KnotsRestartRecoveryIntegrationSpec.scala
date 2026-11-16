@@ -2,11 +2,13 @@ package fr.acinq.eclair.integration
 
 import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.testkit.TestProbe
-import com.ashbornelabs.bitcoin.xbt.scalacompat.ByteVector32
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{ByteVector32, SatoshiLong}
 import com.typesafe.config.ConfigFactory
 import fr.acinq.eclair.TestUtils
 import fr.acinq.eclair.balance.ChannelsListener
 import fr.acinq.eclair.channel._
+import fr.acinq.eclair.db.Databases
+import fr.acinq.eclair.MilliSatoshiLong
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -32,6 +34,13 @@ class KnotsRestartRecoveryIntegrationSpec extends IntegrationSpec {
     val nodeIdBeforeRestart = nodes("A").nodeParams.nodeId
     val nodeABeforeRestart = nodes("A")
     akka.testkit.TestKit.shutdownActorSystem(nodeABeforeRestart.system)
+    nodeABeforeRestart.nodeParams.db match {
+      case db: Databases.SqliteDatabases =>
+        db.channels.sqlite.close()
+        db.network.sqlite.close()
+        db.audit.sqlite.close()
+      case other => fail(s"expected SQLite databases, got ${other.getClass.getSimpleName}")
+    }
     nodes = nodes - "A"
 
     // Advance the chain while Eclair A is stopped, then verify that it catches up on startup.

@@ -23,7 +23,7 @@ import com.ashbornelabs.bitcoin.xbt
 import com.ashbornelabs.bitcoin.xbt.psbt.{Psbt, UpdateFailure}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.TaprootTweak.KeyPathTweak
-import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, Btc, BtcDouble, DeterministicWallet, KotlinUtils, MilliBtcDouble, MnemonicCode, OP_DROP, OP_PUSHDATA, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxIn, TxOut, addressToPublicKeyScript, computeBIP84Address, computeP2WpkhAddress}
+import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, BlockId, Btc, BtcDouble, DeterministicWallet, KotlinUtils, MilliBtcDouble, MnemonicCode, OP_2DROP, OP_DROP, OP_PUSHDATA, OutPoint, Satoshi, SatoshiLong, Script, ScriptWitness, Transaction, TxId, TxIn, TxOut, addressToPublicKeyScript, computeBIP84Address, computeP2WpkhAddress}
 import com.ashbornelabs.bitcoin.xbt.{Bech32, ScriptFlags, SigHash, SigVersion}
 import fr.acinq.eclair.TestUtils.randomTxId
 import fr.acinq.eclair.balance.CheckBalance
@@ -1809,12 +1809,12 @@ class BitcoinCoreClientSpec extends TestKitBaseClass with BitcoindService with A
     val sender = TestProbe()
     val miner = makeBitcoinCoreClient()
 
-    // We create a bunch of confirmed utxos that use a large spending script.
-    // This will let us fill the mempool by creating large transactions spending those utxos.
-    val bigInputScript = Script.write(Seq.fill(200)(Seq(OP_PUSHDATA(ByteVector.fill(15)(42)), OP_DROP)).flatten)
-    val largeInputsCount = 110
+    // We create confirmed UTXOs with a large, standard witness stack so we can fill the mempool without relying on data pushes.
+    val bigInputScript = Script.write(Seq.fill(10)(OP_2DROP))
+    val bigInputWitness = ScriptWitness(Seq(ByteVector(1)) ++ Seq.fill(20)(ByteVector.fill(80)(42)) :+ bigInputScript)
+    val largeInputsCount = 220
     val parentTxs = (1 to 15).map { _ =>
-      val outputs = Seq.fill(largeInputsCount)(TxOut(50_000 sat, Script.pay2wsh(bigInputScript)))
+      val outputs = Seq.fill(largeInputsCount)(TxOut(250_000 sat, Script.pay2wsh(bigInputScript)))
       val txNotFunded = Transaction(2, Nil, outputs, 0)
       miner.fundTransaction(txNotFunded, FeeratePerKw(500 sat), changePosition = Some(outputs.length)).pipeTo(sender.ref)
       val fundedTx = sender.expectMsgType[FundTransactionResponse].tx
@@ -1827,19 +1827,26 @@ class BitcoinCoreClientSpec extends TestKitBaseClass with BitcoindService with A
     generateBlocks(1)
 
     /** Spend all outputs of the given parent transaction, creating a large mempool transaction. */
-    def publishLargeTx(parentTx: Transaction, fromInput: Int, toInput: Int, feerate: FeeratePerKw): Unit = {
+    def publishLargeTx(parentTx: Transaction, fromInput: Int, toInput: Int, feerate: FeeratePerKw): Boolean = {
       val outputAmount = (parentTx.txOut.slice(fromInput, toInput).map(_.amount).sum - Transactions.weight2fee(feerate, 400_000)).max(500 sat)
-      val txIn = (fromInput until toInput).map(i => TxIn(OutPoint(parentTx, i), ByteVector.empty, 0, ScriptWitness(Seq(ByteVector(1), bigInputScript))))
+      val txIn = (fromInput until toInput).map(i => TxIn(OutPoint(parentTx, i), ByteVector.empty, 0, ScriptWitness.empty))
       val txOut = Seq(TxOut(outputAmount, Script.pay2wpkh(randomKey().publicKey)))
       var psbt = new Psbt(Transaction(2, txIn, txOut, 0))
       (fromInput until toInput).foreach { i =>
         psbt = psbt.updateWitnessInput(OutPoint(parentTx, i), parentTx.txOut(i), null, null, null, psbt.getInput(i - fromInput).getDerivationPaths, null, null, java.util.Map.of()).getRight
-        psbt = psbt.finalizeWitnessInput(i - fromInput, ScriptWitness(Seq(ByteVector(1), bigInputScript))).getRight
+        psbt = psbt.finalizeWitnessInput(i - fromInput, bigInputWitness).getRight
       }
-      val signedTx: Transaction = psbt.extract().getRight
+      val signedTx: Transaction = psbt.extract().fold(
+        error => fail(s"failed to extract large witness transaction: $error"),
+        tx => com.ashbornelabs.bitcoin.xbt.scalacompat.KotlinUtils.kmp2scala(tx)
+      )
       assert(signedTx.weight() <= 400_000) // standard transactions cannot exceed 400 000 WU
       miner.publishTransaction(signedTx).pipeTo(sender.ref)
-      sender.expectMsg(signedTx.txid)
+      sender.expectMsgType[Any] match {
+        case txid: TxId if txid == signedTx.txid => true
+        case failure: Failure if failure.cause.getMessage.contains("mempool full") => false
+        case other => fail(s"unexpected result while filling the mempool: $other")
+      }
     }
 
     // We create two transactions that look like channel funding transactions, one for each test scenario.
@@ -1953,8 +1960,13 @@ class BitcoinCoreClientSpec extends TestKitBaseClass with BitcoindService with A
 
     // We now fill the mempool with large transactions to evict splice_tx and anchor_tx.
     // We start with very large transactions and then use smaller transaction to completely fill the mempool.
-    parentTxs.take(12).foreach(tx => publishLargeTx(tx, 0, largeInputsCount, FeeratePerKw(5_000 sat)))
-    (0 until largeInputsCount).foreach(i => publishLargeTx(parentTxs.last, i, i + 1, FeeratePerKw(5_000 sat)))
+    var mempoolFull = false
+    parentTxs.dropRight(1).iterator.takeWhile(_ => !mempoolFull).foreach { tx =>
+      mempoolFull = !publishLargeTx(tx, 0, largeInputsCount, FeeratePerKw(100_000 sat))
+    }
+    (0 until largeInputsCount).iterator.takeWhile(_ => !mempoolFull).foreach { i =>
+      mempoolFull = !publishLargeTx(parentTxs.last, i, i + 1, FeeratePerKw(100_000 sat))
+    }
     Seq(spliceTx, anchorTx).foreach { walletTx =>
       wallet.getMempoolTx(walletTx.txid).pipeTo(sender.ref)
       assert(sender.expectMsgType[Failure].cause.getMessage.contains("Transaction not in mempool"))

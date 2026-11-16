@@ -82,7 +82,8 @@ class StartupIntegrationSpec extends IntegrationSpec {
     val thrown = intercept[BitcoinWalletDisabledException] {
       instantiateEclairNode("F", createConfig(wallet_opt = None))
     }
-    assert(thrown == BitcoinWalletDisabledException(e = JsonRPCError(Error(-32601, "Method not found"))))
+    assert(thrown.getCause.getMessage == "required Bitcoin Core RPC method 'listwallets' failed")
+    assert(thrown.getCause.getCause == JsonRPCError(Error(-32601, "Method not found")))
   }
 
   test("wait for bitcoind to be available") {
