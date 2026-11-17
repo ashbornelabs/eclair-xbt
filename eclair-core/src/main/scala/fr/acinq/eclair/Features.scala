@@ -547,6 +547,13 @@ object Features {
       FeatureException(s"$feature is set but is missing a dependency (${dependencies.filter(d => !features.unscoped().hasFeature(d)).mkString(" and ")})")
   }
 
+  def validateFeatureVector[T <: Feature](features: Features[T]): Option[FeatureException] = {
+    val encoded = EncodedFeatures(features.toByteVector)
+    (0L until encoded.bin.size * 8 by 2).find(bit => encoded.hasFeatureBit(bit) && encoded.hasFeatureBit(bit + 1)).map { bit =>
+      FeatureException(s"feature bits $bit and ${bit + 1} cannot both be set")
+    }
+  }
+
   def testCompatible[T <: Feature](ours: Features[T], theirs: Features[T]): FeatureCompatibilityResult = (ours.testSupported(theirs), theirs.testSupported(ours)) match {
     case (FeatureCompatibilityResult.Compatible, FeatureCompatibilityResult.Compatible) => FeatureCompatibilityResult.Compatible
     case (r1, r2) => FeatureCompatibilityResult.NotCompatible(r1.errorHints ++ r2.errorHints)

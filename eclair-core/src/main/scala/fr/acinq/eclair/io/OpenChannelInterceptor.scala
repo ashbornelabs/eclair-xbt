@@ -31,7 +31,7 @@ import fr.acinq.eclair.io.Peer.{OpenChannelResponse, SpawnChannelNonInitiator}
 import fr.acinq.eclair.io.PendingChannelsRateLimiter.AddOrRejectChannel
 import fr.acinq.eclair.wire.protocol
 import fr.acinq.eclair.wire.protocol.{Error, LiquidityAds, NodeAddress}
-import fr.acinq.eclair.{AcceptOpenChannel, Features, InitFeature, InterceptOpenChannelPlugin, InterceptOpenChannelReceived, InterceptOpenChannelResponse, Logs, NodeParams, RejectOpenChannel}
+import fr.acinq.eclair.{AcceptOpenChannel, FeatureSupport, Features, InitFeature, InterceptOpenChannelPlugin, InterceptOpenChannelReceived, InterceptOpenChannelResponse, Logs, NodeParams, RejectOpenChannel}
 import scodec.bits.ByteVector
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
@@ -110,7 +110,10 @@ private class OpenChannelInterceptor(peer: ActorRef[Any],
   private def sanityCheckInitiator(request: OpenChannelInitiator): Behavior[Command] = {
     val announceChannel = request.open.channelFlags_opt.getOrElse(nodeParams.channelConf.channelFlags).announceChannel
     val channelType_opt = request.open.channelType_opt.orElse(ChannelTypes.preferredForPublicChannels(request.localFeatures, request.remoteFeatures, announceChannel = announceChannel))
-    if (request.open.fundingAmount >= Channel.MAX_FUNDING_WITHOUT_WUMBO && !request.localFeatures.hasFeature(Wumbo)) {
+    if (!request.remoteFeatures.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory))) {
+      request.replyTo ! OpenChannelResponse.Rejected(s"${Features.Blake2b.rfcName} is required for XBT channels")
+      waitForRequest()
+    } else if (request.open.fundingAmount >= Channel.MAX_FUNDING_WITHOUT_WUMBO && !request.localFeatures.hasFeature(Wumbo)) {
       request.replyTo ! OpenChannelResponse.Rejected(s"fundingAmount=${request.open.fundingAmount} is too big, you must enable large channels support in 'eclair.features' to use funding above ${Channel.MAX_FUNDING_WITHOUT_WUMBO} (see eclair.conf)")
       waitForRequest()
     } else if (request.open.fundingAmount >= Channel.MAX_FUNDING_WITHOUT_WUMBO && !request.remoteFeatures.hasFeature(Wumbo)) {
@@ -134,7 +137,11 @@ private class OpenChannelInterceptor(peer: ActorRef[Any],
   }
 
   private def sanityCheckNonInitiator(request: OpenChannelNonInitiator): Behavior[Command] = {
-    ChannelTypes.areCompatible(request.temporaryChannelId, request.localFeatures, request.channelType_opt) match {
+    if (!request.remoteFeatures.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory))) {
+      context.log.warn(s"ignoring remote channel open: ${Features.Blake2b.rfcName} is required for XBT channels")
+      sendFailure(s"${Features.Blake2b.rfcName} is required for XBT channels", request)
+      waitForRequest()
+    } else ChannelTypes.areCompatible(request.temporaryChannelId, request.localFeatures, request.channelType_opt) match {
       case Right(_: ChannelTypes.SimpleTaprootChannel) if request.channelFlags.announceChannel =>
         context.log.warn("ignoring remote channel open: public taproot channels aren't supported yet")
         sendFailure("public taproot channels aren't supported yet: announce_channel must be set to false", request)

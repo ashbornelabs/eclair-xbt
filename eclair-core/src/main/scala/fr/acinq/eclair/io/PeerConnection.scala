@@ -146,7 +146,9 @@ class PeerConnection(keyPair: KeyPair, conf: PeerConnection.Conf, switchboard: A
         remoteInit.remoteAddress_opt.foreach(address => log.info("peer reports that our IP address is {} (public={})", address.toString, NodeAddress.isPublicIPAddress(address)))
 
         val featureGraphErr_opt = Features.validateFeatureGraph(remoteInit.features)
-        val featuresCompatibilityResult = Features.testCompatible(d.localInit.features, remoteInit.features)
+        val featureVectorErr_opt = Features.validateFeatureVector(remoteInit.features)
+        // Peers that don't implement XBT may still connect, but they cannot open channels with us.
+        val featuresCompatibilityResult = Features.testCompatible(d.localInit.features.remove(Features.Blake2b), remoteInit.features.remove(Features.Blake2b))
         if (remoteInit.networks.nonEmpty && remoteInit.networks.intersect(d.localInit.networks).isEmpty) {
           log.warning(s"incompatible networks (${remoteInit.networks}), disconnecting")
           d.pendingAuth.origin_opt.foreach(_ ! ConnectionResult.InitializationFailed("incompatible networks"))
@@ -156,6 +158,12 @@ class PeerConnection(keyPair: KeyPair, conf: PeerConnection.Conf, switchboard: A
           val featureGraphErr = featureGraphErr_opt.get
           log.warning(featureGraphErr.message)
           d.pendingAuth.origin_opt.foreach(_ ! ConnectionResult.InitializationFailed(featureGraphErr.message))
+          d.transport ! PoisonPill
+          stay()
+        } else if (featureVectorErr_opt.nonEmpty) {
+          val featureVectorErr = featureVectorErr_opt.get
+          log.warning(featureVectorErr.message)
+          d.pendingAuth.origin_opt.foreach(_ ! ConnectionResult.InitializationFailed(featureVectorErr.message))
           d.transport ! PoisonPill
           stay()
         } else if (!featuresCompatibilityResult.areCompatible) {
