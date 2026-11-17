@@ -419,6 +419,16 @@ object Features {
     val mandatory = 128
   }
 
+  case object Blake2b extends Feature with InitFeature with NodeFeature with Bolt11Feature with Bolt12Feature {
+    val rfcName = "option_blake2b"
+    val mandatory = 512
+  }
+
+  case object UnifiedSigs extends Feature with InitFeature with NodeFeature with ChannelTypeFeature {
+    val rfcName = "option_unified_sigs"
+    val mandatory = 514
+  }
+
   /** This feature bit indicates that the node is a mobile wallet that can be woken up via push notifications. */
   case object WakeUpNotificationClient extends Feature with InitFeature {
     val rfcName = "wake_up_notification_client"
@@ -507,7 +517,9 @@ object Features {
     SplicePrototype,
     OnTheFlyFunding,
     FundingFeeCredit,
-    PhoenixZeroReserve
+    PhoenixZeroReserve,
+    Blake2b,
+    UnifiedSigs
   )
 
   // Features may depend on other features, as specified in Bolt 9.
@@ -524,7 +536,8 @@ object Features {
     SimpleTaprootChannels -> (ChannelType :: SimpleClose :: Nil),
     SimpleTaprootChannelsPhoenix -> (ChannelType :: SimpleClose :: Nil),
     AsyncPaymentPrototype -> (TrampolinePaymentPrototype :: Nil),
-    FundingFeeCredit -> (OnTheFlyFunding :: Nil)
+    FundingFeeCredit -> (OnTheFlyFunding :: Nil),
+    UnifiedSigs -> (Blake2b :: Nil)
   )
 
   case class FeatureException(message: String) extends IllegalArgumentException(message)

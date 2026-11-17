@@ -414,6 +414,7 @@ object NodeParams extends Logging {
       require(featuresErr.isEmpty, featuresErr.map(_.message))
       require(!features.hasFeature(Features.InitialRoutingSync), s"${Features.InitialRoutingSync.rfcName} is not supported anymore, use ${Features.ChannelRangeQueries.rfcName} instead")
       require(features.hasFeature(Features.DataLossProtect), s"${Features.DataLossProtect.rfcName} must be enabled")
+      require(features.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory)), s"${Features.Blake2b.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.VariableLengthOnion, Some(FeatureSupport.Mandatory)), s"${Features.VariableLengthOnion.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.PaymentSecret, Some(FeatureSupport.Mandatory)), s"${Features.PaymentSecret.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.StaticRemoteKey), s"${Features.StaticRemoteKey.rfcName} must be enabled")
