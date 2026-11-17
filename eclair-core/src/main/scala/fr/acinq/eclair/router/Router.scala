@@ -55,6 +55,11 @@ class Router(val nodeParams: NodeParams, watcher: typed.ActorRef[ZmqWatcher.Comm
 
   import Router._
 
+  private def isPreActivationChannel(announcement: ChannelAnnouncement): Boolean = {
+    val activationHeight = nodeParams.blake2bActivationHeight
+    activationHeight != Int.MaxValue && announcement.shortChannelId.blockHeight.toInt < activationHeight
+  }
+
   import ExecutionContext.Implicits.global
 
   // we pass these to helpers classes so that they have the logging context
@@ -74,10 +79,12 @@ class Router(val nodeParams: NodeParams, watcher: typed.ActorRef[ZmqWatcher.Comm
       startTimerWithFixedDelay(TickBroadcast.toString, TickBroadcast, nodeParams.routerConf.routerBroadcastInterval)
       startTimerWithFixedDelay(TickPruneStaleChannels.toString, TickPruneStaleChannels, 1 hour)
 
-      val (pruned, channels) = publicChannels.partition { case (_, pc) => pc.isStale(nodeParams.currentBlockHeight) }
+      val (preActivation, activationEligibleChannels) = publicChannels.partition { case (_, pc) => isPreActivationChannel(pc.ann) }
+      val (pruned, channels) = activationEligibleChannels.partition { case (_, pc) => pc.isStale(nodeParams.currentBlockHeight) }
       Metrics.Nodes.withoutTags().update(publicNodes.size)
       Metrics.Channels.withoutTags().update(channels.size)
       log.info("loaded from db: channels={} nodes={}", channels.size, publicNodes.size)
+      log.info("ignored pre-BLAKE2b-activation channels={}", preActivation.size)
       log.info("{} pruned channels at blockHeight={}", pruned.size, nodeParams.currentBlockHeight)
       // this will be used to calculate routes
       val graph = DirectedGraph.makeGraph(channels, publicNodes)
@@ -262,6 +269,12 @@ class Router(val nodeParams: NodeParams, watcher: typed.ActorRef[ZmqWatcher.Comm
     case Event(PeerRoutingMessage(_, _, routingMessage: HasChainHash), _) if routingMessage.chainHash != nodeParams.chainHash =>
       sender() ! TransportHandler.ReadAck(routingMessage)
       log.warning("message {} for wrong chain {}, we're on {}", routingMessage, routingMessage.chainHash, nodeParams.chainHash)
+      stay()
+
+    case Event(PeerRoutingMessage(peerConnection, _, c: ChannelAnnouncement), _) if isPreActivationChannel(c) =>
+      peerConnection ! TransportHandler.ReadAck(c)
+      peerConnection ! GossipDecision.ValidationFailure(c)
+      log.warning("ignoring pre-BLAKE2b-activation channel announcement shortChannelId={}", c.shortChannelId)
       stay()
 
     case Event(PeerRoutingMessage(peerConnection, remoteNodeId, c: ChannelAnnouncement), d: Data) =>

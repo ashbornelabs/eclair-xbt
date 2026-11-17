@@ -20,7 +20,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValueType}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockHash, ByteVector32, Crypto, Satoshi, SatoshiLong}
 import fr.acinq.eclair.Setup.Seeds
-import fr.acinq.eclair.blockchain.NetworkProfile
+import fr.acinq.eclair.blockchain.{KnotsCompatibilityProfile, NetworkProfile}
 import fr.acinq.eclair.blockchain.fee._
 import fr.acinq.eclair.channel.fsm.Channel
 import fr.acinq.eclair.channel.fsm.Channel.{BalanceThreshold, ChannelConf, UnhandledExceptionStrategy}
@@ -100,7 +100,8 @@ case class NodeParams(nodeKeyManager: NodeKeyManager,
                       peerStorageConfig: PeerStorageConfig,
                       peerScoringConfig: PeerScorer.Config,
                       peerStatsTrackerConfig: PeerStatsTracker.Config,
-                      offersConfig: OffersConfig) {
+                      offersConfig: OffersConfig,
+                      blake2bActivationHeight: Int = 0) {
   val privateKey: Crypto.PrivateKey = nodeKeyManager.nodeKey.privateKey
 
   val nodeId: PublicKey = nodeKeyManager.nodeId
@@ -699,6 +700,7 @@ object NodeParams extends Logging {
       initialRandomReconnectDelay = FiniteDuration(config.getDuration("initial-random-reconnect-delay").getSeconds, TimeUnit.SECONDS),
       maxReconnectInterval = FiniteDuration(config.getDuration("max-reconnect-interval").getSeconds, TimeUnit.SECONDS),
       chainHash = chainHash,
+      blake2bActivationHeight = KnotsCompatibilityProfile.forNetwork(NetworkProfile.fromName(config.getString("chain")).get).consensus.blake2bHeight,
       invoiceExpiry = FiniteDuration(config.getDuration("invoice-expiry").getSeconds, TimeUnit.SECONDS),
       multiPartPaymentExpiry = FiniteDuration(config.getDuration("multi-part-payment-expiry").getSeconds, TimeUnit.SECONDS),
       peerConnectionConf = PeerConnection.Conf(

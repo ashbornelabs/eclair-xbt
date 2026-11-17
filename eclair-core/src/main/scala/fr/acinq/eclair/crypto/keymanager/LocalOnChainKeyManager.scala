@@ -287,7 +287,7 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
     // Match Bitcoin Knots: opt into unified sighash whenever BLAKE2b is scheduled for this XBT network.
     // An unspecified input sighash defaults to SIGHASH_ALL before the fork.
     val sighashType = if (unifiedSighash) SigHash.SIGHASH_ALL | SigHash.SIGHASH_UNIFIED else SigHash.SIGHASH_ALL
-    val acceptedSighashTypes = if (unifiedSighash) Seq(SigHash.SIGHASH_ALL, sighashType) else Seq(sighashType)
+    val acceptedSighashTypes = Seq(sighashType)
     require(Option(input.getSighashType).forall(acceptedSighashTypes.contains), s"input sighash must be SIGHASH_ALL${if (unifiedSighash) "|UNIFIED" else ""} (got=${input.getSighashType}): bitcoin core may be malicious")
 
     // Check that we're signing a p2wpkh input and that the keypath is provided and correct.
@@ -327,8 +327,8 @@ class LocalOnChainKeyManager(override val walletName: String, seed: ByteVector, 
     val input = psbt.getInput(pos)
     require(input != null, s"input $pos is missing from psbt: bitcoin core may be malicious")
     val sighashType = if (unifiedSighash) SigHash.SIGHASH_ALL | SigHash.SIGHASH_UNIFIED else SigHash.SIGHASH_DEFAULT
-    val acceptedSighashTypes = if (unifiedSighash) Seq(SigHash.SIGHASH_DEFAULT, sighashType) else Seq(sighashType)
-    require(Option(input.getSighashType).forall(acceptedSighashTypes.contains), s"input sighash must be ${if (unifiedSighash) "SIGHASH_DEFAULT or SIGHASH_ALL|UNIFIED" else "SIGHASH_DEFAULT"} (got=${input.getSighashType}): bitcoin core may be malicious")
+    val acceptedSighashTypes = Seq(sighashType)
+    require(Option(input.getSighashType).forall(acceptedSighashTypes.contains), s"input sighash must be ${if (unifiedSighash) "SIGHASH_ALL|UNIFIED" else "SIGHASH_DEFAULT"} (got=${input.getSighashType}): bitcoin core may be malicious")
 
     // Check that we're signing a p2tr input and that the keypath is provided and correct.
     require(input.getTaprootDerivationPaths.size() == 1, "bip32 derivation path is missing: bitcoin core may be malicious")
