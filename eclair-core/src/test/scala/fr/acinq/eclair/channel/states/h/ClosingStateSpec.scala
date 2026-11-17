@@ -399,7 +399,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat =>
         bob2blockchain.expectReplaceableTxPublished[ClaimRemoteAnchorTx]
         bob2blockchain.expectFinalTxPublished("remote-main")
-      case ZeroFeeCommitmentFormat =>
+      case _: ZeroFeeCommitmentFormat =>
         // We don't need a dedicated anchor transaction, we'll use our main output instead.
         bob2blockchain.expectReplaceableTxPublished[ClaimRemoteMainOutputTx]
     }
@@ -584,7 +584,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
         val anchorTx = alice2blockchain.expectReplaceableTxPublished[ClaimRemoteAnchorTx].tx
         val mainTx = alice2blockchain.expectFinalTxPublished("remote-main").tx
         (Some(mainTx), Some(anchorTx))
-      case ZeroFeeCommitmentFormat =>
+      case _: ZeroFeeCommitmentFormat =>
         val mainTx = alice2blockchain.expectReplaceableTxPublished[ClaimRemoteMainOutputTx].tx
         (Some(mainTx), None)
     }
@@ -1552,7 +1552,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     val bobCommitTx = bob.signCommitTx()
     commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(bobCommitTx.txOut.length == 7) // two main outputs + two anchors + 3 HTLCs
-      case ZeroFeeCommitmentFormat => assert(bobCommitTx.txOut.length == 6) // two main outputs + one anchors + 3 HTLCs
+      case _: ZeroFeeCommitmentFormat => assert(bobCommitTx.txOut.length == 6) // two main outputs + one anchors + 3 HTLCs
     }
     val (closingState, closingTxs) = remoteClose(bobCommitTx, alice, alice2blockchain, htlcTimeoutCount = 3)
     assert(closingState.htlcOutputs.size == 3)
@@ -1965,7 +1965,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     val bobCommit1 = RevokedCommit(bob.signCommitTx(), Nil)
     bob.commitments.latest.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(bobCommit1.commitTx.txOut.size == 4) // 2 main outputs + 2 anchors
-      case ZeroFeeCommitmentFormat => assert(bobCommit1.commitTx.txOut.size == 3) // 2 main outputs + 1 anchor
+      case _: ZeroFeeCommitmentFormat => assert(bobCommit1.commitTx.txOut.size == 3) // 2 main outputs + 1 anchor
     }
 
     // Bob's second commit tx contains 1 incoming htlc and 1 outgoing htlc
@@ -1981,7 +1981,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     assert(alice.signCommitTx().txOut.size == bobCommit2.commitTx.txOut.size)
     bob.commitments.latest.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(bobCommit2.commitTx.txOut.size == 6)
-      case ZeroFeeCommitmentFormat => assert(bobCommit2.commitTx.txOut.size == 5)
+      case _: ZeroFeeCommitmentFormat => assert(bobCommit2.commitTx.txOut.size == 5)
     }
 
     // Bob's third commit tx contains 2 incoming htlcs and 2 outgoing htlcs
@@ -1997,7 +1997,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     assert(alice.signCommitTx().txOut.size == bobCommit3.commitTx.txOut.size)
     bob.commitments.latest.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(bobCommit3.commitTx.txOut.size == 8)
-      case ZeroFeeCommitmentFormat => assert(bobCommit3.commitTx.txOut.size == 7)
+      case _: ZeroFeeCommitmentFormat => assert(bobCommit3.commitTx.txOut.size == 7)
     }
 
     // Bob's fourth commit tx doesn't contain any htlc
@@ -2011,7 +2011,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     assert(alice.signCommitTx().txOut.size == bobCommit4.commitTx.txOut.size)
     bob.commitments.latest.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(bobCommit4.commitTx.txOut.size == 4)
-      case ZeroFeeCommitmentFormat => assert(bobCommit4.commitTx.txOut.size == 3)
+      case _: ZeroFeeCommitmentFormat => assert(bobCommit4.commitTx.txOut.size == 3)
     }
 
     RevokedCloseFixture(Seq(bobCommit1, bobCommit2, bobCommit3, bobCommit4), Seq(htlcAlice1, htlcAlice2), Seq(htlcBob1, htlcBob2))
@@ -2050,7 +2050,7 @@ class ClosingStateSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike with
     val spentOutpoints = Seq(mainTx.input, mainPenaltyTx.input) ++ htlcPenaltyTxs.map(_.input)
     commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(spentOutpoints.size == bobRevokedTx.txOut.size - 2) // we don't claim the anchors
-      case ZeroFeeCommitmentFormat => assert(spentOutpoints.size == bobRevokedTx.txOut.size - 1) // we don't claim the anchor
+      case _: ZeroFeeCommitmentFormat => assert(spentOutpoints.size == bobRevokedTx.txOut.size - 1) // we don't claim the anchor
     }
 
     // alice watches on-chain transactions

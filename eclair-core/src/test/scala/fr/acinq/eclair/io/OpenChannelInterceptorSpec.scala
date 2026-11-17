@@ -52,6 +52,7 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
   val defaultFeatures: Features[InitFeature] = Features(Map[InitFeature, FeatureSupport](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, Features.Blake2b -> Mandatory))
 
   val noPlugin = "no plugin"
+  private val unifiedSigsRequired = Tag("unified-sigs-required")
 
   override def withFixture(test: OneArgTest): Outcome = {
     val peer = TestProbe[Any]()
@@ -67,6 +68,7 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
     }
     val nodeParams = TestConstants.Alice.nodeParams
       .modify(_.pluginParams).usingIf(!test.tags.contains(noPlugin))(_ :+ plugin)
+      .copy(blake2bActivationHeight = if (test.tags.contains(unifiedSigsRequired.name)) 0 else Int.MaxValue)
 
     val eventListener = TestProbe[ChannelAborted]()
     system.eventStream ! EventStream.Subscribe(eventListener.ref)
@@ -109,6 +111,33 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
     val request = OpenChannelNonInitiator(remoteNodeId, Left(openChannel), defaultFeatures, remoteFeatures, peerConnection.ref, remoteAddress)
     openChannelInterceptor ! request
     assert(peer.expectMessageType[OutgoingMessage].msg.asInstanceOf[Error].toAscii.contains("option_blake2b is required for XBT channels"))
+    eventListener.expectMessageType[ChannelAborted]
+  }
+
+  test("reject outgoing channel open that would downgrade unified sighash after activation", unifiedSigsRequired) { f =>
+    import f._
+    val probe = TestProbe[Any]()
+    val features = defaultFeatures.add(Features.UnifiedSigs, Optional)
+    val request = OpenChannelInitiator(probe.ref, remoteNodeId, Peer.OpenChannel(remoteNodeId, 300_000 sat, Some(ChannelTypes.AnchorOutputsZeroFeeHtlcTx()), None, None, None, None, None, None), features, features)
+    openChannelInterceptor ! request
+    assert(probe.expectMessageType[OpenChannelResponse.Rejected].reason.contains("option_unified_sigs is required for XBT channels"))
+  }
+
+  test("select unified-sighash channel type when both peers support it after activation", unifiedSigsRequired) { f =>
+    import f._
+    val probe = TestProbe[Any]()
+    val features = defaultFeatures.add(Features.UnifiedSigs, Optional)
+    val request = OpenChannelInitiator(probe.ref, remoteNodeId, Peer.OpenChannel(remoteNodeId, 300_000 sat, None, None, None, None, None, None, None), features, features)
+    openChannelInterceptor ! request
+    assert(peer.expectMessageType[SpawnChannelInitiator].channelType == ChannelTypes.AnchorOutputsZeroFeeHtlcTx(unifiedSigs = true))
+  }
+
+  test("reject incoming legacy channel type that would downgrade unified sighash after activation", unifiedSigsRequired) { f =>
+    import f._
+    val features = defaultFeatures.add(Features.UnifiedSigs, Optional)
+    val open = createOpenChannelMessage(ChannelTypes.AnchorOutputsZeroFeeHtlcTx())
+    openChannelInterceptor ! OpenChannelNonInitiator(remoteNodeId, Left(open), features, features, peerConnection.ref, remoteAddress)
+    assert(peer.expectMessageType[OutgoingMessage].msg.asInstanceOf[Error].toAscii.contains("option_unified_sigs is required for XBT channels"))
     eventListener.expectMessageType[ChannelAborted]
   }
 
@@ -177,7 +206,8 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
 
     // no open channel interceptor plugin registered
     val wallet = new DummyOnChainWallet()
-    val openChannelInterceptor = testKit.spawn(OpenChannelInterceptor(peer.ref, TestConstants.Alice.nodeParams, remoteNodeId, wallet, pendingChannelsRateLimiter.ref, 10 millis))
+    val nodeParams = TestConstants.Alice.nodeParams.copy(blake2bActivationHeight = Int.MaxValue)
+    val openChannelInterceptor = testKit.spawn(OpenChannelInterceptor(peer.ref, nodeParams, remoteNodeId, wallet, pendingChannelsRateLimiter.ref, 10 millis))
     val openChannelNonInitiator = OpenChannelNonInitiator(remoteNodeId, Left(openChannel), defaultFeatures, defaultFeatures, peerConnection.ref, remoteAddress)
     openChannelInterceptor ! openChannelNonInitiator
     pendingChannelsRateLimiter.expectMessageType[AddOrRejectChannel].replyTo ! PendingChannelsRateLimiter.AcceptOpenChannel
@@ -338,7 +368,7 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
 
     // If we both support anchor outputs, it is selected by default.
     {
-      val features = Features[InitFeature](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
+      val features = Features[InitFeature](Features.Blake2b -> Mandatory, StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
       val open = Peer.OpenChannel(remoteNodeId, 500_000 sat, None, None, None, None, None, None, None)
       openChannelInterceptor ! OpenChannelInitiator(probe.ref, remoteNodeId, open, features, features)
       assert(TestConstants.Alice.nodeParams.channelConf.channelFlags.announceChannel)
@@ -346,15 +376,15 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
     }
     // If we don't announce the channel, we can use scid_alias.
     {
-      val features = Features[InitFeature](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
+      val features = Features[InitFeature](Features.Blake2b -> Mandatory, StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
       val open = Peer.OpenChannel(remoteNodeId, 500_000 sat, None, None, None, None, None, Some(ChannelFlags(announceChannel = false)), None)
       openChannelInterceptor ! OpenChannelInitiator(probe.ref, remoteNodeId, open, features, features)
       assert(peer.expectMessageType[Peer.SpawnChannelInitiator].channelType == ChannelTypes.AnchorOutputsZeroFeeHtlcTx(scidAlias = true))
     }
     // If our peer doesn't support anchor outputs, we can't find a satisfying channel type.
     {
-      val localFeatures = Features[InitFeature](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
-      val remoteFeatures = Features[InitFeature](StaticRemoteKey -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
+      val localFeatures = Features[InitFeature](Features.Blake2b -> Mandatory, StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
+      val remoteFeatures = Features[InitFeature](Features.Blake2b -> Mandatory, StaticRemoteKey -> Optional, ChannelType -> Optional, ScidAlias -> Optional)
       val open = Peer.OpenChannel(remoteNodeId, 500_000 sat, None, None, None, None, None, None, None)
       openChannelInterceptor ! OpenChannelInitiator(probe.ref, remoteNodeId, open, localFeatures, remoteFeatures)
       assert(probe.expectMessageType[OpenChannelResponse.Rejected].reason == "channel_type must be provided and compatible with our peer's features")

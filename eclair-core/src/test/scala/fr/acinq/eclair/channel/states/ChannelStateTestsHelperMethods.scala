@@ -661,7 +661,7 @@ trait ChannelStateTestsBase extends Assertions with Eventually {
     val commitTx = closingState.commitments.latest.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => s2blockchain.expectFinalTxPublished("commit-tx").tx
       // In the 0-fee case, we cannot publish the commitment transaction alone.
-      case ZeroFeeCommitmentFormat => localCommitPublished.commitTx
+      case _: ZeroFeeCommitmentFormat => localCommitPublished.commitTx
     }
     assert(commitTx.txid == closingState.commitments.latest.localCommit.txId)
     val commitInput = closingState.commitments.latest.commitInput(s.underlyingActor.channelKeys)
@@ -733,7 +733,7 @@ trait ChannelStateTestsBase extends Assertions with Eventually {
         val publishedMainTx_opt = remoteCommitPublished.localOutput_opt.map(_ => s2blockchain.expectFinalTxPublished("remote-main").tx)
         publishedMainTx_opt.foreach(tx => Transaction.correctlySpends(tx, rCommitTx :: Nil, ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS))
         (publishedMainTx_opt, Some(publishedAnchorTx))
-      case ZeroFeeCommitmentFormat =>
+      case _: ZeroFeeCommitmentFormat =>
         val publishedMainTx = s2blockchain.expectReplaceableTxPublished[ClaimRemoteMainOutputTx].tx
         (Some(publishedMainTx), None)
     }

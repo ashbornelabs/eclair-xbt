@@ -328,14 +328,20 @@ class TransactionsSpec extends AnyFunSuite with Logging {
       val htlcSuccessTxs = htlcTxs.collect { case tx: UnsignedHtlcSuccessTx => tx }
       val htlcTimeoutTxs = htlcTxs.collect { case tx: UnsignedHtlcTimeoutTx => tx }
       commitmentFormat match {
-        case ZeroFeeHtlcTxAnchorOutputsCommitmentFormat | ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat | ZeroFeeCommitmentFormat =>
+        case format: AnchorOutputsCommitmentFormat =>
+          val expectedHtlcIds = if (format.zeroFeeHtlcTx) Set(0, 1, 2, 3, 4, 7, 8) else Set(0, 1, 2, 3, 4)
+          assert(htlcTxs.map(_.htlcId).toSet == expectedHtlcIds)
+          assert(expiries.keySet == expectedHtlcIds)
+          assert(htlcTimeoutTxs.map(_.htlcId).toSet == (if (format.zeroFeeHtlcTx) Set(0, 3, 7) else Set(0, 3)))
+          assert(htlcSuccessTxs.map(_.htlcId).toSet == (if (format.zeroFeeHtlcTx) Set(1, 2, 4, 8) else Set(1, 2, 4)))
+        case ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat | _: ZeroFeeCommitmentFormat =>
           assert(htlcTxs.length == 7)
           assert(expiries == Map(0 -> 300, 1 -> 310, 2 -> 310, 3 -> 295, 4 -> 300, 7 -> 300, 8 -> 302))
           assert(htlcTimeoutTxs.size == 3) // htlc1 and htlc3 and htlc7
           assert(htlcTimeoutTxs.map(_.htlcId).toSet == Set(0, 3, 7))
           assert(htlcSuccessTxs.size == 4) // htlc2a, htlc2b, htlc4 and htlc8
           assert(htlcSuccessTxs.map(_.htlcId).toSet == Set(1, 2, 4, 8))
-        case UnsafeLegacyAnchorOutputsCommitmentFormat | PhoenixSimpleTaprootChannelCommitmentFormat =>
+        case PhoenixSimpleTaprootChannelCommitmentFormat =>
           assert(htlcTxs.length == 5)
           assert(expiries == Map(0 -> 300, 1 -> 310, 2 -> 310, 3 -> 295, 4 -> 300))
           assert(htlcTimeoutTxs.size == 2) // htlc1 and htlc3
@@ -350,7 +356,7 @@ class TransactionsSpec extends AnyFunSuite with Logging {
         assert(commitTx.version == 2)
         htlcTimeoutTxs.foreach(htlcTx => assert(htlcTx.tx.version == 2))
         htlcSuccessTxs.foreach(htlcTx => assert(htlcTx.tx.version == 2))
-      case ZeroFeeCommitmentFormat =>
+      case _: ZeroFeeCommitmentFormat =>
         assert(commitTx.version == 3)
         htlcTimeoutTxs.foreach(htlcTx => assert(htlcTx.tx.version == 3))
         htlcSuccessTxs.foreach(htlcTx => assert(htlcTx.tx.version == 3))
@@ -397,7 +403,7 @@ class TransactionsSpec extends AnyFunSuite with Logging {
       commitmentFormat match {
         case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(!claimAnchorOutputTx.validate(Map.empty))
         // Standard P2A outputs are valid with an empty witness.
-        case ZeroFeeCommitmentFormat => assert(claimAnchorOutputTx.validate(Map.empty))
+        case _: ZeroFeeCommitmentFormat => assert(claimAnchorOutputTx.validate(Map.empty))
       }
       val signedTx = claimAnchorOutputTx.sign()
       Transaction.correctlySpends(signedTx, Seq(commitTx), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
@@ -506,13 +512,20 @@ class TransactionsSpec extends AnyFunSuite with Logging {
       val skipped = claimHtlcDelayedPenaltyTxs.collect { case Left(reason) => reason }
       val claimed = claimHtlcDelayedPenaltyTxs.collect { case Right(tx) => tx }
       commitmentFormat match {
-        case ZeroFeeHtlcTxAnchorOutputsCommitmentFormat | ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat | ZeroFeeCommitmentFormat =>
+        case format: AnchorOutputsCommitmentFormat =>
+          val expectedClaimCount = if (format.zeroFeeHtlcTx) 5 else 3
+          assert(claimHtlcDelayedPenaltyTxs.size == expectedClaimCount + 2)
+          assert(skipped.size == 2)
+          assert(skipped.toSet == Set(AmountBelowDustLimit))
+          assert(claimed.size == expectedClaimCount)
+          assert(claimed.map(_.input.outPoint).toSet.size == expectedClaimCount)
+        case ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat | _: ZeroFeeCommitmentFormat =>
           assert(claimHtlcDelayedPenaltyTxs.size == 7)
           assert(skipped.size == 2)
           assert(skipped.toSet == Set(AmountBelowDustLimit))
           assert(claimed.size == 5)
           assert(claimed.map(_.input.outPoint).toSet.size == 5)
-        case UnsafeLegacyAnchorOutputsCommitmentFormat | PhoenixSimpleTaprootChannelCommitmentFormat =>
+        case PhoenixSimpleTaprootChannelCommitmentFormat =>
           assert(claimHtlcDelayedPenaltyTxs.size == 5)
           assert(skipped.size == 2)
           assert(skipped.toSet == Set(AmountBelowDustLimit))
@@ -561,6 +574,12 @@ class TransactionsSpec extends AnyFunSuite with Logging {
 
   test("generate valid commitment and htlc transactions (zero-fee commitments)") {
     testCommitAndHtlcTxs(ZeroFeeCommitmentFormat)
+  }
+
+  test("generate valid commitment and htlc transactions with unified sighash") {
+    testCommitAndHtlcTxs(UnifiedAnchorOutputsCommitmentFormat(UnsafeLegacyAnchorOutputsCommitmentFormat))
+    testCommitAndHtlcTxs(UnifiedAnchorOutputsCommitmentFormat(ZeroFeeHtlcTxAnchorOutputsCommitmentFormat))
+    testCommitAndHtlcTxs(UnifiedZeroFeeCommitmentFormat)
   }
 
   test("generate taproot NUMS point") {

@@ -397,7 +397,7 @@ abstract class ChannelIntegrationSpec extends IntegrationSpec {
     // in this commitment, both parties should have a main output, there are four pending htlcs and anchor outputs if applicable
     channelType.commitmentFormat match {
       case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => assert(revokedCommitTx.txOut.size == 8)
-      case ZeroFeeCommitmentFormat => assert(revokedCommitTx.txOut.size == 7)
+      case _: ZeroFeeCommitmentFormat => assert(revokedCommitTx.txOut.size == 7)
     }
     val outgoingHtlcExpiry = commitmentsF.latest.localCommit.spec.htlcs.collect { case OutgoingHtlc(add) => add.cltvExpiry }.max
     val htlcTxsF = commitmentsF.latest.htlcTxs(channelKeysF)
@@ -487,7 +487,7 @@ abstract class AnchorChannelIntegrationSpec extends ChannelIntegrationSpec {
         val channelKeys = nodes("F").nodeParams.channelKeyManager.channelKeys(initialStateDataF.channelParams.channelConfig, initialStateDataF.channelParams.localParams.fundingKeyPath)
         val toRemote = Scripts.toRemoteDelayed(initialStateDataF.commitments.latest.localKeys(channelKeys).publicKeys)
         Script.write(Script.pay2wsh(toRemote))
-      case ZeroFeeCommitmentFormat =>
+      case _: ZeroFeeCommitmentFormat =>
         val channelKeys = nodes("F").nodeParams.channelKeyManager.channelKeys(initialStateDataF.channelParams.channelConfig, initialStateDataF.channelParams.localParams.fundingKeyPath)
         Script.write(Script.pay2wpkh(initialStateDataF.commitments.latest.localKeys(channelKeys).theirPaymentPublicKey))
       case _: SimpleTaprootChannelCommitmentFormat => ???

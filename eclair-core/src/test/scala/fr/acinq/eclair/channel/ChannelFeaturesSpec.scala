@@ -34,6 +34,10 @@ class ChannelFeaturesSpec extends TestKitBaseClass with AnyFunSuiteLike with Cha
       TestCase(Features(StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Mandatory, ScidAlias -> Mandatory), ChannelTypes.AnchorOutputsZeroFeeHtlcTx(scidAlias = true)),
       TestCase(Features(StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Mandatory, ZeroConf -> Mandatory), ChannelTypes.AnchorOutputsZeroFeeHtlcTx(zeroConf = true)),
       TestCase(Features(StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Mandatory, ScidAlias -> Mandatory, ZeroConf -> Mandatory), ChannelTypes.AnchorOutputsZeroFeeHtlcTx(scidAlias = true, zeroConf = true)),
+      TestCase(Features(StaticRemoteKey -> Mandatory, AnchorOutputs -> Mandatory, UnifiedSigs -> Mandatory), ChannelTypes.AnchorOutputs(unifiedSigs = true)),
+      TestCase(Features(StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Mandatory, UnifiedSigs -> Mandatory, ScidAlias -> Mandatory, ZeroConf -> Mandatory), ChannelTypes.AnchorOutputsZeroFeeHtlcTx(scidAlias = true, zeroConf = true, unifiedSigs = true)),
+      TestCase(Features(ZeroFeeCommitments -> Mandatory, UnifiedSigs -> Mandatory), ChannelTypes.ZeroFeeCommitments(unifiedSigs = true)),
+      TestCase(Features(ZeroFeeCommitments -> Mandatory, UnifiedSigs -> Mandatory, ScidAlias -> Mandatory, ZeroConf -> Mandatory), ChannelTypes.ZeroFeeCommitments(scidAlias = true, zeroConf = true, unifiedSigs = true)),
     )
     for (testCase <- validChannelTypes) {
       assert(ChannelTypes.fromFeatures(testCase.features) == testCase.expectedChannelType, testCase.features)
@@ -49,10 +53,22 @@ class ChannelFeaturesSpec extends TestKitBaseClass with AnyFunSuiteLike with Cha
       Features(StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Optional),
       Features(StaticRemoteKey -> Mandatory, AnchorOutputs -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Mandatory),
       Features(StaticRemoteKey -> Mandatory, AnchorOutputs -> Optional, AnchorOutputsZeroFeeHtlcTx -> Mandatory),
+      // Unified signatures can be negotiated for the supported segwit-v0 channel types, but not simple taproot.
+      Features(SimpleTaprootChannels -> Mandatory, UnifiedSigs -> Mandatory),
     )
     for (features <- invalidChannelTypes) {
       assert(ChannelTypes.fromFeatures(features) == ChannelTypes.UnsupportedChannelType(features), features)
     }
+  }
+
+  test("prefer unified-sighash channel types only when both peers advertise support") {
+    val local: Features[InitFeature] = Features[InitFeature](StaticRemoteKey -> Mandatory, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Mandatory, UnifiedSigs -> Optional)
+    val remoteWithUnified: Features[InitFeature] = local
+    val remoteWithoutUnified: Features[InitFeature] = local.remove(UnifiedSigs)
+
+    assert(ChannelTypes.preferredForPublicChannels(local, remoteWithUnified, announceChannel = true).contains(ChannelTypes.AnchorOutputsZeroFeeHtlcTx(unifiedSigs = true)))
+    assert(ChannelTypes.preferredForPublicChannels(local, remoteWithoutUnified, announceChannel = true).contains(ChannelTypes.AnchorOutputsZeroFeeHtlcTx()))
+    assert(ChannelTypes.preferredForPublicChannels(local, remoteWithUnified, announceChannel = false).contains(ChannelTypes.AnchorOutputsZeroFeeHtlcTx(scidAlias = false, unifiedSigs = true)))
   }
 
   test("enrich channel type with optional permanent channel features") {

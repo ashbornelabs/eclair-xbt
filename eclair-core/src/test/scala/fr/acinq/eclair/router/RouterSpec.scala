@@ -23,6 +23,7 @@ import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Script.{pay2wsh, write}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, ByteVector32, OutPoint, Satoshi, SatoshiLong, Transaction, TxIn, TxOut}
 import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher._
+import fr.acinq.eclair.blockchain.bitcoind.ZmqWatcher.{Command => ZmqWatcherCommand}
 import fr.acinq.eclair.channel._
 import fr.acinq.eclair.crypto.TransportHandler
 import fr.acinq.eclair.io.Peer.PeerRoutingMessage
@@ -42,6 +43,7 @@ import org.scalatest.Inside.inside
 import scodec.bits._
 
 import scala.concurrent.duration._
+import scala.collection.immutable.SortedMap
 
 /**
  * Created by PM on 29/08/2016.
@@ -49,9 +51,9 @@ import scala.concurrent.duration._
 
 class RouterSpec extends BaseRouterSpec {
 
-  test("ignore channel announcements below the XBT activation height") {
+  test("ignore channel announcements below the XBT activation height") { _ =>
     val nodeParams = TestConstants.Alice.nodeParams.copy(blake2bActivationHeight = 100)
-    val watcher = TestProbe()
+    val watcher = TypedProbe[ZmqWatcherCommand]()(system.toTyped)
     val router = system.actorOf(Router.props(nodeParams, watcher.ref))
     router ! Router.Init(SortedMap.empty, Nil, None)
     val peerConnection = TestProbe()

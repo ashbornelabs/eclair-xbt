@@ -88,9 +88,9 @@ class FeaturesSpec extends AnyFunSuite {
   }
 
   test("reject feature vectors that set both forms of a paired feature") {
-    val invalidXbtFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(512, 513))))
-    val invalidUnknownFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(1200, 1201))))
-    val validFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(512))))
+    val invalidXbtFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512, 513))))
+    val invalidUnknownFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(1200, 1201))))
+    val validFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512))))
     assert(Features.validateFeatureVector(invalidXbtFeatures).nonEmpty)
     assert(Features.validateFeatureVector(invalidUnknownFeatures).nonEmpty)
     assert(Features.validateFeatureVector(validFeatures).isEmpty)
