@@ -49,7 +49,7 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
   val remoteNodeId: Crypto.PublicKey = randomKey().publicKey
   val openChannel: OpenChannel = createOpenChannelMessage(ChannelTypes.AnchorOutputsZeroFeeHtlcTx())
   val remoteAddress: NodeAddress = IPAddress(InetAddress.getLoopbackAddress, 19735)
-  val defaultFeatures: Features[InitFeature] = Features(Map[InitFeature, FeatureSupport](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional))
+  val defaultFeatures: Features[InitFeature] = Features(Map[InitFeature, FeatureSupport](StaticRemoteKey -> Optional, AnchorOutputsZeroFeeHtlcTx -> Optional, ChannelType -> Optional, Features.Blake2b -> Mandatory))
 
   val noPlugin = "no plugin"
 
@@ -91,6 +91,24 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
     pendingChannelsRateLimiter.expectMessageType[AddOrRejectChannel].replyTo ! PendingChannelsRateLimiter.AcceptOpenChannel
     pluginInterceptor.expectMessageType[InterceptOpenChannelReceived]
     assert(peer.expectMessageType[OutgoingMessage].msg.asInstanceOf[Error].toAscii.contains("plugin timeout"))
+    eventListener.expectMessageType[ChannelAborted]
+  }
+
+  test("reject outgoing channel open when the peer lacks the mandatory XBT feature") { f =>
+    import f._
+    val probe = TestProbe[Any]()
+    val remoteFeatures = defaultFeatures.remove(Features.Blake2b)
+    val request = OpenChannelInitiator(probe.ref, remoteNodeId, Peer.OpenChannel(remoteNodeId, 300_000 sat, Some(ChannelTypes.AnchorOutputsZeroFeeHtlcTx()), None, None, None, None, None, None), defaultFeatures, remoteFeatures)
+    openChannelInterceptor ! request
+    assert(probe.expectMessageType[OpenChannelResponse.Rejected].reason.contains("option_blake2b is required for XBT channels"))
+  }
+
+  test("reject incoming channel open when the peer lacks the mandatory XBT feature") { f =>
+    import f._
+    val remoteFeatures = defaultFeatures.remove(Features.Blake2b)
+    val request = OpenChannelNonInitiator(remoteNodeId, Left(openChannel), defaultFeatures, remoteFeatures, peerConnection.ref, remoteAddress)
+    openChannelInterceptor ! request
+    assert(peer.expectMessageType[OutgoingMessage].msg.asInstanceOf[Error].toAscii.contains("option_blake2b is required for XBT channels"))
     eventListener.expectMessageType[ChannelAborted]
   }
 

@@ -75,6 +75,27 @@ class FeaturesSpec extends AnyFunSuite {
     assert(Features(hex"2000").hasFeature(StaticRemoteKey, Some(Optional)))
   }
 
+  test("XBT feature assignments and contexts") {
+    assert(Blake2b.mandatory == 512)
+    assert(UnifiedSigs.mandatory == 514)
+    val features = Features(Blake2b -> Mandatory, UnifiedSigs -> Optional)
+    assert(features.initFeatures().hasFeature(Blake2b, Some(Mandatory)))
+    assert(features.nodeAnnouncementFeatures().hasFeature(Blake2b, Some(Mandatory)))
+    assert(features.bolt11Features().hasFeature(Blake2b, Some(Mandatory)))
+    assert(features.bolt12Features().hasFeature(Blake2b, Some(Mandatory)))
+    assert(features.initFeatures().hasFeature(UnifiedSigs, Some(Optional)))
+    assert(features.nodeAnnouncementFeatures().hasFeature(UnifiedSigs, Some(Optional)))
+  }
+
+  test("reject feature vectors that set both forms of a paired feature") {
+    val invalidXbtFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(512, 513))))
+    val invalidUnknownFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(1200, 1201))))
+    val validFeatures = Features[Feature](Map.empty, Some(EncodedFeatures.fromFeatureBits(Set(512))))
+    assert(Features.validateFeatureVector(invalidXbtFeatures).nonEmpty)
+    assert(Features.validateFeatureVector(invalidUnknownFeatures).nonEmpty)
+    assert(Features.validateFeatureVector(validFeatures).isEmpty)
+  }
+
   test("features dependencies") {
     val testCases = Map(
       bin"                                " -> true,

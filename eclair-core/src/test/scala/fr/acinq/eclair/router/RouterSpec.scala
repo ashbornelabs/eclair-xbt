@@ -49,6 +49,19 @@ import scala.concurrent.duration._
 
 class RouterSpec extends BaseRouterSpec {
 
+  test("ignore channel announcements below the XBT activation height") {
+    val nodeParams = TestConstants.Alice.nodeParams.copy(blake2bActivationHeight = 100)
+    val watcher = TestProbe()
+    val router = system.actorOf(Router.props(nodeParams, watcher.ref))
+    router ! Router.Init(SortedMap.empty, Nil, None)
+    val peerConnection = TestProbe()
+    val announcement = channelAnnouncement(RealShortChannelId(BlockHeight(99), 1, 0), priv_a, priv_c, priv_funding_a, priv_funding_c)
+    peerConnection.send(router, PeerRoutingMessage(peerConnection.ref, remoteNodeId, announcement))
+    peerConnection.expectMsg(TransportHandler.ReadAck(announcement))
+    peerConnection.expectMsg(GossipDecision.ValidationFailure(announcement))
+    watcher.expectNoMessage(100 millis)
+  }
+
   test("properly announce valid new nodes announcements and ignore invalid ones") { fixture =>
     import fixture._
     val eventListener = TestProbe()
