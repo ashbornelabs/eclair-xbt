@@ -20,7 +20,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValueType}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.PublicKey
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{BlockHash, ByteVector32, Crypto, Satoshi, SatoshiLong}
 import fr.acinq.eclair.Setup.Seeds
-import fr.acinq.eclair.blockchain.NetworkProfile
+import fr.acinq.eclair.blockchain.{KnotsCompatibilityProfile, NetworkProfile}
 import fr.acinq.eclair.blockchain.fee._
 import fr.acinq.eclair.channel.fsm.Channel
 import fr.acinq.eclair.channel.fsm.Channel.{BalanceThreshold, ChannelConf, UnhandledExceptionStrategy}
@@ -100,7 +100,8 @@ case class NodeParams(nodeKeyManager: NodeKeyManager,
                       peerStorageConfig: PeerStorageConfig,
                       peerScoringConfig: PeerScorer.Config,
                       peerStatsTrackerConfig: PeerStatsTracker.Config,
-                      offersConfig: OffersConfig) {
+                      offersConfig: OffersConfig,
+                      blake2bActivationHeight: Int = 0) {
   val privateKey: Crypto.PrivateKey = nodeKeyManager.nodeKey.privateKey
 
   val nodeId: PublicKey = nodeKeyManager.nodeId
@@ -414,6 +415,7 @@ object NodeParams extends Logging {
       require(featuresErr.isEmpty, featuresErr.map(_.message))
       require(!features.hasFeature(Features.InitialRoutingSync), s"${Features.InitialRoutingSync.rfcName} is not supported anymore, use ${Features.ChannelRangeQueries.rfcName} instead")
       require(features.hasFeature(Features.DataLossProtect), s"${Features.DataLossProtect.rfcName} must be enabled")
+      require(features.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory)), s"${Features.Blake2b.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.VariableLengthOnion, Some(FeatureSupport.Mandatory)), s"${Features.VariableLengthOnion.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.PaymentSecret, Some(FeatureSupport.Mandatory)), s"${Features.PaymentSecret.rfcName} must be enabled and mandatory")
       require(features.hasFeature(Features.StaticRemoteKey), s"${Features.StaticRemoteKey.rfcName} must be enabled")
@@ -698,6 +700,7 @@ object NodeParams extends Logging {
       initialRandomReconnectDelay = FiniteDuration(config.getDuration("initial-random-reconnect-delay").getSeconds, TimeUnit.SECONDS),
       maxReconnectInterval = FiniteDuration(config.getDuration("max-reconnect-interval").getSeconds, TimeUnit.SECONDS),
       chainHash = chainHash,
+      blake2bActivationHeight = KnotsCompatibilityProfile.forNetwork(NetworkProfile.fromName(config.getString("chain")).get).consensus.blake2bHeight,
       invoiceExpiry = FiniteDuration(config.getDuration("invoice-expiry").getSeconds, TimeUnit.SECONDS),
       multiPartPaymentExpiry = FiniteDuration(config.getDuration("multi-part-payment-expiry").getSeconds, TimeUnit.SECONDS),
       peerConnectionConf = PeerConnection.Conf(

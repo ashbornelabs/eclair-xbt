@@ -177,7 +177,7 @@ object LocalCommit {
     log.info(s"built local commit number=$localCommitIndex toLocalMsat=${spec.toLocal.toLong} toRemoteMsat=${spec.toRemote.toLong} htlc_in={} htlc_out={} feeratePerKw=${spec.commitTxFeerate} txid=${localCommitTx.tx.txid} fundingTxId=$fundingTxId", spec.htlcs.collect(DirectedHtlc.incoming).map(_.id).mkString(","), spec.htlcs.collect(DirectedHtlc.outgoing).map(_.id).mkString(","))
     val validRemoteCommitSig: ChannelSpendSignature = commit.signatureFor(commitmentFormat) match {
       case Some(individualSig: IndividualSignature) =>
-        if (!localCommitTx.checkRemoteSig(fundingKey.publicKey, remoteFundingPubKey, individualSig)) {
+        if (!localCommitTx.checkRemoteSig(fundingKey.publicKey, remoteFundingPubKey, individualSig, commitmentFormat.channelSighash)) {
           return Left(InvalidCommitmentSignature(channelParams.channelId, fundingTxId, localCommitIndex, localCommitTx.tx))
         } else {
           individualSig
@@ -217,7 +217,7 @@ case class RemoteCommit(index: Long, spec: CommitmentSpec, txId: TxId, remotePer
     log.info(s"built remote commit number=$index toLocalMsat=${spec.toLocal.toLong} toRemoteMsat=${spec.toRemote.toLong} htlc_in={} htlc_out={} feeratePerKw=${spec.commitTxFeerate} txid=${remoteCommitTx.tx.txid} fundingTxId=${commitInput.outPoint.txid}", spec.htlcs.collect(DirectedHtlc.outgoing).map(_.id).mkString(","), spec.htlcs.collect(DirectedHtlc.incoming).map(_.id).mkString(","))
     commitmentFormat match {
       case _: SegwitV0CommitmentFormat =>
-        val sig = remoteCommitTx.sign(fundingKey, remoteFundingPubKey)
+        val sig = remoteCommitTx.sign(fundingKey, remoteFundingPubKey, commitmentFormat.channelSighash)
         Right(CommitSig(channelParams.channelId, commitInput.outPoint.txid, sig, htlcSigs.toList, batchSize))
       case _: SimpleTaprootChannelCommitmentFormat =>
         remoteNonce_opt match {
@@ -665,7 +665,7 @@ case class Commitment(fundingTxIndex: Long,
     log.info(s"built remote commit number=${remoteCommit.index + 1} toLocalMsat=${spec.toLocal.toLong} toRemoteMsat=${spec.toRemote.toLong} htlc_in={} htlc_out={} feeratePerKw=${spec.commitTxFeerate} txid=${remoteCommitTx.tx.txid} fundingTxId=$fundingTxId", spec.htlcs.collect(DirectedHtlc.outgoing).map(_.id).mkString(","), spec.htlcs.collect(DirectedHtlc.incoming).map(_.id).mkString(","))
     Metrics.recordHtlcsInFlight(spec, remoteCommit.spec)
     val sig = commitmentFormat match {
-      case _: SegwitV0CommitmentFormat => remoteCommitTx.sign(fundingKey, remoteFundingPubKey)
+      case _: SegwitV0CommitmentFormat => remoteCommitTx.sign(fundingKey, remoteFundingPubKey, commitmentFormat.channelSighash)
       case _: SimpleTaprootChannelCommitmentFormat =>
         nextRemoteNonce_opt match {
           case Some(remoteNonce) =>
@@ -706,8 +706,8 @@ case class Commitment(fundingTxIndex: Long,
     val (unsignedCommitTx, _) = Commitment.makeLocalTxs(params, localCommitParams, commitKeys, localCommit.index, fundingKey, remoteFundingPubKey, commitInput(fundingKey), commitmentFormat, localCommit.spec)
     localCommit.remoteSig match {
       case remoteSig: IndividualSignature =>
-        val localSig = unsignedCommitTx.sign(fundingKey, remoteFundingPubKey)
-        unsignedCommitTx.aggregateSigs(fundingKey.publicKey, remoteFundingPubKey, localSig, remoteSig)
+        val localSig = unsignedCommitTx.sign(fundingKey, remoteFundingPubKey, commitmentFormat.channelSighash)
+        unsignedCommitTx.aggregateSigs(fundingKey.publicKey, remoteFundingPubKey, localSig, remoteSig, commitmentFormat.channelSighash)
       case remoteSig: PartialSignatureWithNonce =>
         val localNonce = if (fundingTxIndex == 0 && localCommit.index == 0 && !params.channelFeatures.hasFeature(Features.DualFunding)) {
           // With channel establishment v1, we exchange the first nonce before the funding tx and remote funding key are known.

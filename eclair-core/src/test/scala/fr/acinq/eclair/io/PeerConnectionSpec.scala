@@ -97,6 +97,14 @@ class PeerConnectionSpec extends TestKitBaseClass with FixtureAnyFunSuiteLike wi
     connect(nodeParams, remoteNodeId, switchboard, router, connection, transport, peerConnection, peer)
   }
 
+  test("connect to a peer that doesn't advertise XBT support") { f =>
+    import f._
+    val xbtNodeParams = nodeParams.copy(features = nodeParams.features.add(Features.Blake2b, Mandatory))
+    val nonXbtRemoteInit = protocol.Init(Bob.nodeParams.features.initFeatures())
+    assert(!nonXbtRemoteInit.features.hasFeature(Features.Blake2b))
+    connect(xbtNodeParams, remoteNodeId, switchboard, router, connection, transport, peerConnection, peer, nonXbtRemoteInit)
+  }
+
   test("send incoming connection's remote address in init") { f =>
     import f._
     val probe = TestProbe()

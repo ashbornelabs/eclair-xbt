@@ -88,13 +88,19 @@ case class OnChainFeeConf(feeTargets: FeeTargets,
   /** To avoid spamming our peers with fee updates every time there's a small variation, we only update the fee when the difference exceeds a given ratio. */
   def shouldUpdateFee(currentFeeratePerKw: FeeratePerKw, nextFeeratePerKw: FeeratePerKw, commitmentFormat: CommitmentFormat): Boolean = {
     commitmentFormat match {
-      case Transactions.UnsafeLegacyAnchorOutputsCommitmentFormat | Transactions.PhoenixSimpleTaprootChannelCommitmentFormat =>
+      case format: Transactions.AnchorOutputsCommitmentFormat =>
+        if (format.zeroFeeHtlcTx) {
+          currentFeeratePerKw.toLong == 0 || Math.abs((currentFeeratePerKw.toLong - nextFeeratePerKw.toLong).toDouble / currentFeeratePerKw.toLong) > updateFeeMinDiffRatio
+        } else {
+          FeeratePerKw(FeeratePerByte(1 sat)) < currentFeeratePerKw
+        }
+      case Transactions.PhoenixSimpleTaprootChannelCommitmentFormat =>
         // If we're not already using 1 sat/byte, we update the fee.
         FeeratePerKw(FeeratePerByte(1 sat)) < currentFeeratePerKw
-      case Transactions.ZeroFeeHtlcTxAnchorOutputsCommitmentFormat | Transactions.ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat =>
+      case Transactions.ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat =>
         // If the fee has a large enough change, we update the fee.
         currentFeeratePerKw.toLong == 0 || Math.abs((currentFeeratePerKw.toLong - nextFeeratePerKw.toLong).toDouble / currentFeeratePerKw.toLong) > updateFeeMinDiffRatio
-      case Transactions.ZeroFeeCommitmentFormat =>
+      case _: Transactions.ZeroFeeCommitmentFormat =>
         // We never send update_fee when using zero-fee commitments.
         false
     }
@@ -120,12 +126,18 @@ case class OnChainFeeConf(feeTargets: FeeTargets,
     val networkFeerate = feerates.fast
     val networkMinFee = feerates.minimum
     commitmentFormat match {
-      case Transactions.ZeroFeeCommitmentFormat => FeeratePerKw(0 sat)
-      case Transactions.UnsafeLegacyAnchorOutputsCommitmentFormat | Transactions.PhoenixSimpleTaprootChannelCommitmentFormat =>
-        // Since Bitcoin Core v28, 1-parent-1-child package relay has been deployed: it should be ok if the commit tx
-        // doesn't propagate on its own.
-        FeeratePerKw(FeeratePerByte(1 sat))
-      case Transactions.ZeroFeeHtlcTxAnchorOutputsCommitmentFormat | Transactions.ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat =>
+      case _: Transactions.ZeroFeeCommitmentFormat => FeeratePerKw(0 sat)
+      case format: Transactions.AnchorOutputsCommitmentFormat =>
+        if (format.zeroFeeHtlcTx) {
+          val targetFeerate = networkFeerate.min(feerateToleranceFor(remoteNodeId).anchorOutputMaxCommitFeerate)
+          targetFeerate.max(networkMinFee * 1.25)
+        } else {
+          // Since Bitcoin Core v28, 1-parent-1-child package relay has been deployed: it should be ok if the commit tx
+          // doesn't propagate on its own.
+          FeeratePerKw(FeeratePerByte(1 sat))
+        }
+      case Transactions.PhoenixSimpleTaprootChannelCommitmentFormat => FeeratePerKw(FeeratePerByte(1 sat))
+      case Transactions.ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat =>
         val targetFeerate = networkFeerate.min(feerateToleranceFor(remoteNodeId).anchorOutputMaxCommitFeerate)
         // We make sure the feerate is always greater than the propagation threshold.
         targetFeerate.max(networkMinFee * 1.25)

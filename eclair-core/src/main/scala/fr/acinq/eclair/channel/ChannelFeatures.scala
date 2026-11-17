@@ -75,25 +75,27 @@ sealed trait SupportedChannelType extends ChannelType {
 object ChannelTypes {
 
   // @formatter:off
-  case class AnchorOutputs(scidAlias: Boolean = false, zeroConf: Boolean = false) extends SupportedChannelType {
+  case class AnchorOutputs(scidAlias: Boolean = false, zeroConf: Boolean = false, unifiedSigs: Boolean = false) extends SupportedChannelType {
     override def features: Set[ChannelTypeFeature] = Set(
       if (scidAlias) Some(Features.ScidAlias) else None,
       if (zeroConf) Some(Features.ZeroConf) else None,
+      if (unifiedSigs) Some(Features.UnifiedSigs) else None,
       Some(Features.StaticRemoteKey),
       Some(Features.AnchorOutputs)
     ).flatten
-    override def commitmentFormat: CommitmentFormat = UnsafeLegacyAnchorOutputsCommitmentFormat
-    override def toString: String = s"anchor_outputs${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}"
+    override def commitmentFormat: CommitmentFormat = if (unifiedSigs) UnifiedAnchorOutputsCommitmentFormat(UnsafeLegacyAnchorOutputsCommitmentFormat) else UnsafeLegacyAnchorOutputsCommitmentFormat
+    override def toString: String = s"anchor_outputs${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}${if (unifiedSigs) "+unified_sigs" else ""}"
   }
-  case class AnchorOutputsZeroFeeHtlcTx(scidAlias: Boolean = false, zeroConf: Boolean = false) extends SupportedChannelType {
+  case class AnchorOutputsZeroFeeHtlcTx(scidAlias: Boolean = false, zeroConf: Boolean = false, unifiedSigs: Boolean = false) extends SupportedChannelType {
     override def features: Set[ChannelTypeFeature] = Set(
       if (scidAlias) Some(Features.ScidAlias) else None,
       if (zeroConf) Some(Features.ZeroConf) else None,
+      if (unifiedSigs) Some(Features.UnifiedSigs) else None,
       Some(Features.StaticRemoteKey),
       Some(Features.AnchorOutputsZeroFeeHtlcTx)
     ).flatten
-    override def commitmentFormat: CommitmentFormat = ZeroFeeHtlcTxAnchorOutputsCommitmentFormat
-    override def toString: String = s"anchor_outputs_zero_fee_htlc_tx${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}"
+    override def commitmentFormat: CommitmentFormat = if (unifiedSigs) UnifiedAnchorOutputsCommitmentFormat(ZeroFeeHtlcTxAnchorOutputsCommitmentFormat) else ZeroFeeHtlcTxAnchorOutputsCommitmentFormat
+    override def toString: String = s"anchor_outputs_zero_fee_htlc_tx${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}${if (unifiedSigs) "+unified_sigs" else ""}"
   }
   case class SimpleTaprootChannel(scidAlias: Boolean = false, zeroConf: Boolean = false) extends SupportedChannelType {
     override def features: Set[ChannelTypeFeature] = Set(
@@ -104,14 +106,15 @@ object ChannelTypes {
     override def commitmentFormat: CommitmentFormat = ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat
     override def toString: String = s"simple_taproot_channel${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}"
   }
-  case class ZeroFeeCommitments(scidAlias: Boolean = false, zeroConf: Boolean = false) extends SupportedChannelType {
+  case class ZeroFeeCommitments(scidAlias: Boolean = false, zeroConf: Boolean = false, unifiedSigs: Boolean = false) extends SupportedChannelType {
     override def features: Set[ChannelTypeFeature] = Set(
       if (scidAlias) Some(Features.ScidAlias) else None,
       if (zeroConf) Some(Features.ZeroConf) else None,
+      if (unifiedSigs) Some(Features.UnifiedSigs) else None,
       Some(Features.ZeroFeeCommitments)
     ).flatten
-    override def commitmentFormat: CommitmentFormat = ZeroFeeCommitmentFormat
-    override def toString: String = s"zero_fee_commitments${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}"
+    override def commitmentFormat: CommitmentFormat = if (unifiedSigs) UnifiedZeroFeeCommitmentFormat else ZeroFeeCommitmentFormat
+    override def toString: String = s"zero_fee_commitments${if (scidAlias) "+scid_alias" else ""}${if (zeroConf) "+zeroconf" else ""}${if (unifiedSigs) "+unified_sigs" else ""}"
   }
 
   case class UnsupportedChannelType(featureBits: Features[InitFeature]) extends ChannelType {
@@ -144,6 +147,18 @@ object ChannelTypes {
     ZeroFeeCommitments(zeroConf = true),
     ZeroFeeCommitments(scidAlias = true),
     ZeroFeeCommitments(scidAlias = true, zeroConf = true),
+    AnchorOutputs(unifiedSigs = true),
+    AnchorOutputs(zeroConf = true, unifiedSigs = true),
+    AnchorOutputs(scidAlias = true, unifiedSigs = true),
+    AnchorOutputs(scidAlias = true, zeroConf = true, unifiedSigs = true),
+    AnchorOutputsZeroFeeHtlcTx(unifiedSigs = true),
+    AnchorOutputsZeroFeeHtlcTx(zeroConf = true, unifiedSigs = true),
+    AnchorOutputsZeroFeeHtlcTx(scidAlias = true, unifiedSigs = true),
+    AnchorOutputsZeroFeeHtlcTx(scidAlias = true, zeroConf = true, unifiedSigs = true),
+    ZeroFeeCommitments(unifiedSigs = true),
+    ZeroFeeCommitments(zeroConf = true, unifiedSigs = true),
+    ZeroFeeCommitments(scidAlias = true, unifiedSigs = true),
+    ZeroFeeCommitments(scidAlias = true, zeroConf = true, unifiedSigs = true),
     SimpleTaprootChannelsPhoenix,
   ).map {
     channelType => Features(channelType.features.map(_ -> FeatureSupport.Mandatory).toMap) -> channelType
@@ -164,13 +179,14 @@ object ChannelTypes {
   /** Returns our preferred channel type for public channels, if supported by our peer. */
   def preferredForPublicChannels(localFeatures: Features[InitFeature], remoteFeatures: Features[InitFeature], announceChannel: Boolean): Option[SupportedChannelType] = {
     val useScidAlias = !announceChannel && Features.canUseFeature(localFeatures, remoteFeatures, Features.ScidAlias)
-    if (!announceChannel && Features.canUseFeature(localFeatures, remoteFeatures, Features.SimpleTaprootChannels)) {
+    val useUnifiedSigs = Features.canUseFeature(localFeatures, remoteFeatures, Features.UnifiedSigs)
+    if (!useUnifiedSigs && !announceChannel && Features.canUseFeature(localFeatures, remoteFeatures, Features.SimpleTaprootChannels)) {
       // We currently only support unannounced taproot channels.
       Some(SimpleTaprootChannel(scidAlias = useScidAlias))
     } else if (Features.canUseFeature(localFeatures, remoteFeatures, Features.ZeroFeeCommitments)) {
-      Some(ZeroFeeCommitments(scidAlias = useScidAlias))
+      Some(ZeroFeeCommitments(scidAlias = useScidAlias, unifiedSigs = useUnifiedSigs))
     } else if (Features.canUseFeature(localFeatures, remoteFeatures, Features.AnchorOutputsZeroFeeHtlcTx)) {
-      Some(AnchorOutputsZeroFeeHtlcTx(scidAlias = useScidAlias))
+      Some(AnchorOutputsZeroFeeHtlcTx(scidAlias = useScidAlias, unifiedSigs = useUnifiedSigs))
     } else {
       None
     }

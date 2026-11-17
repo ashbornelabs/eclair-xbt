@@ -236,7 +236,7 @@ trait ChannelOpenSingleFunded extends SingleFundingHandlers with ErrorHandlers {
                   }
                 case None => Left(MissingCommitNonce(d.channelId, NonceGenerator.dummyFundingTxId, commitmentNumber = 0))
               }
-            case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(fundingKey, d.remoteFundingPubKey))
+            case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(fundingKey, d.remoteFundingPubKey, d.commitmentFormat.channelSighash))
           }
           localSigOfRemoteTx match {
             case Left(f) => handleLocalError(f, d, None)
@@ -293,7 +293,7 @@ trait ChannelOpenSingleFunded extends SingleFundingHandlers with ErrorHandlers {
           // check remote signature validity
           val validRemoteSig_opt: Option[ChannelSpendSignature] = fc.signatureFor(d.commitmentFormat) match {
             case Some(individualSig: IndividualSignature) =>
-              if (!localCommitTx.checkRemoteSig(fundingKey.publicKey, d.remoteFundingPubKey, individualSig)) None else Some(individualSig)
+              if (!localCommitTx.checkRemoteSig(fundingKey.publicKey, d.remoteFundingPubKey, individualSig, d.commitmentFormat.channelSighash)) None else Some(individualSig)
             case Some(partialSig: PartialSignatureWithNonce) =>
               val localNonce = NonceGenerator.verificationNonce(NonceGenerator.dummyFundingTxId, fundingKey, NonceGenerator.dummyRemoteFundingPubKey, 0)
               if (!localCommitTx.checkRemotePartialSignature(fundingKey.publicKey, d.remoteFundingPubKey, partialSig, localNonce.publicNonce)) None else Some(partialSig)
@@ -316,7 +316,7 @@ trait ChannelOpenSingleFunded extends SingleFundingHandlers with ErrorHandlers {
                       }
                     case None => Left(MissingCommitNonce(channelId, NonceGenerator.dummyFundingTxId, commitmentNumber = 0))
                   }
-                case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(fundingKey, d.remoteFundingPubKey))
+                case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(fundingKey, d.remoteFundingPubKey, d.commitmentFormat.channelSighash))
               }
               localSigOfRemoteTx match {
                 case Left(f) => handleLocalError(f, d, Some(fc))
@@ -384,7 +384,7 @@ trait ChannelOpenSingleFunded extends SingleFundingHandlers with ErrorHandlers {
       val fundingKey = channelKeys.fundingKey(fundingTxIndex = 0)
       val validRemoteSig_opt: Option[ChannelSpendSignature] = fundingSigned.signatureFor(d.commitmentFormat) match {
         case Some(individualSig: IndividualSignature) =>
-          if (!d.localCommitTx.checkRemoteSig(fundingKey.publicKey, d.remoteFundingPubKey, individualSig)) None else Some(individualSig)
+          if (!d.localCommitTx.checkRemoteSig(fundingKey.publicKey, d.remoteFundingPubKey, individualSig, d.commitmentFormat.channelSighash)) None else Some(individualSig)
         case Some(partialSig: PartialSignatureWithNonce) =>
           val localNonce = NonceGenerator.verificationNonce(NonceGenerator.dummyFundingTxId, fundingKey, NonceGenerator.dummyRemoteFundingPubKey, 0)
           if (!d.localCommitTx.checkRemotePartialSignature(fundingKey.publicKey, d.remoteFundingPubKey, partialSig, localNonce.publicNonce)) None else Some(partialSig)

@@ -94,9 +94,10 @@ case class OutgoingHtlc(add: UpdateAddHtlc) extends DirectedHtlc
 final case class CommitmentSpec(htlcs: Set[DirectedHtlc], commitTxFeerate: FeeratePerKw, toLocal: MilliSatoshi, toRemote: MilliSatoshi) {
 
   def htlcTxFeerate(commitmentFormat: CommitmentFormat): FeeratePerKw = commitmentFormat match {
-    case ZeroFeeHtlcTxAnchorOutputsCommitmentFormat | ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat => FeeratePerKw(0 sat)
-    case ZeroFeeCommitmentFormat => FeeratePerKw(0 sat)
-    case UnsafeLegacyAnchorOutputsCommitmentFormat | PhoenixSimpleTaprootChannelCommitmentFormat => commitTxFeerate
+    case format: AnchorOutputsCommitmentFormat if format.zeroFeeHtlcTx => FeeratePerKw(0 sat)
+    case ZeroFeeHtlcTxSimpleTaprootChannelCommitmentFormat => FeeratePerKw(0 sat)
+    case _: ZeroFeeCommitmentFormat => FeeratePerKw(0 sat)
+    case _: AnchorOutputsCommitmentFormat | PhoenixSimpleTaprootChannelCommitmentFormat => commitTxFeerate
   }
 
   def findIncomingHtlcById(id: Long): Option[IncomingHtlc] = htlcs.collectFirst { case htlc: IncomingHtlc if htlc.add.id == id => htlc }

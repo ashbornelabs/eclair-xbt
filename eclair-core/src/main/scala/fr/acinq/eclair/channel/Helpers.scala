@@ -777,7 +777,7 @@ object Helpers {
         log.debug("making closing tx with closing fee={} and commitments:\n{}", closingFees.preferred, commitment.specs2String)
         val dustLimit = commitment.localCommitParams.dustLimit.max(commitment.remoteCommitParams.dustLimit)
         val closingTx = ClosingTx.createUnsignedTx(commitment.commitInput(channelKeys), localScriptPubkey, remoteScriptPubkey, commitment.localChannelParams.paysClosingFees, dustLimit, closingFees.preferred, commitment.localCommit.spec)
-        val localClosingSig = closingTx.sign(channelKeys.fundingKey(commitment.fundingTxIndex), commitment.remoteFundingPubKey).sig
+        val localClosingSig = closingTx.sign(channelKeys.fundingKey(commitment.fundingTxIndex), commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash).sig
         val closingSigned = ClosingSigned(commitment.channelId, closingFees.preferred, localClosingSig, TlvStream(ClosingSignedTlv.FeeRange(closingFees.min, closingFees.max)))
         log.debug(s"signed closing txid=${closingTx.tx.txid} with closing fee=${closingSigned.feeSatoshis}")
         log.debug(s"closingTxid=${closingTx.tx.txid} closingTx=${closingTx.tx}}")
@@ -788,8 +788,8 @@ object Helpers {
         val (closingTx, closingSigned) = makeClosingTx(channelKeys, commitment, localScriptPubkey, remoteScriptPubkey, ClosingFees(remoteClosingFee, remoteClosingFee, remoteClosingFee))
         if (checkClosingDustAmounts(closingTx)) {
           val fundingPubkey = channelKeys.fundingKey(commitment.fundingTxIndex).publicKey
-          if (closingTx.checkRemoteSig(fundingPubkey, commitment.remoteFundingPubKey, IndividualSignature(remoteClosingSig))) {
-            val signedTx = closingTx.aggregateSigs(fundingPubkey, commitment.remoteFundingPubKey, IndividualSignature(closingSigned.signature), IndividualSignature(remoteClosingSig))
+          if (closingTx.checkRemoteSig(fundingPubkey, commitment.remoteFundingPubKey, IndividualSignature(remoteClosingSig), commitment.commitmentFormat.channelSighash)) {
+            val signedTx = closingTx.aggregateSigs(fundingPubkey, commitment.remoteFundingPubKey, IndividualSignature(closingSigned.signature), IndividualSignature(remoteClosingSig), commitment.commitmentFormat.channelSighash)
             Right(closingTx.copy(tx = signedTx), closingSigned)
           } else {
             Left(InvalidCloseSignature(commitment.channelId, closingTx.tx.txid))
@@ -847,9 +847,9 @@ object Helpers {
                 ).flatten[ClosingCompleteTlv])
             }
           case _: SegwitV0CommitmentFormat => TlvStream(Set(
-            closingTxs.localAndRemote_opt.map(tx => ClosingTlv.CloserAndCloseeOutputs(tx.sign(localFundingKey, commitment.remoteFundingPubKey).sig)),
-            closingTxs.localOnly_opt.map(tx => ClosingTlv.CloserOutputOnly(tx.sign(localFundingKey, commitment.remoteFundingPubKey).sig)),
-            closingTxs.remoteOnly_opt.map(tx => ClosingTlv.CloseeOutputOnly(tx.sign(localFundingKey, commitment.remoteFundingPubKey).sig)),
+            closingTxs.localAndRemote_opt.map(tx => ClosingTlv.CloserAndCloseeOutputs(tx.sign(localFundingKey, commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash).sig)),
+            closingTxs.localOnly_opt.map(tx => ClosingTlv.CloserOutputOnly(tx.sign(localFundingKey, commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash).sig)),
+            closingTxs.remoteOnly_opt.map(tx => ClosingTlv.CloseeOutputOnly(tx.sign(localFundingKey, commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash).sig)),
           ).flatten[ClosingCompleteTlv])
         }
         val closingComplete = ClosingComplete(commitment.channelId, localScriptPubkey, remoteScriptPubkey, closingFee.fee, currentBlockHeight.toLong, tlvs)
@@ -918,8 +918,8 @@ object Helpers {
             closingTxsWithSigs.headOption match {
               case Some((closingTx, remoteSig, sigToTlv)) =>
                 val localFundingKey = channelKeys.fundingKey(commitment.fundingTxIndex)
-                val localSig = closingTx.sign(localFundingKey, commitment.remoteFundingPubKey)
-                val signedTx = closingTx.aggregateSigs(localFundingKey.publicKey, commitment.remoteFundingPubKey, localSig, IndividualSignature(remoteSig))
+                val localSig = closingTx.sign(localFundingKey, commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash)
+                val signedTx = closingTx.aggregateSigs(localFundingKey.publicKey, commitment.remoteFundingPubKey, localSig, IndividualSignature(remoteSig), commitment.commitmentFormat.channelSighash)
                 val signedClosingTx = closingTx.copy(tx = signedTx)
                 if (signedClosingTx.validate(extraUtxos = Map.empty)) {
                   Right(signedClosingTx, ClosingSig(commitment.channelId, remoteScriptPubkey, localScriptPubkey, closingComplete.fees, closingComplete.lockTime, TlvStream(sigToTlv(localSig.sig))), None)
@@ -957,8 +957,8 @@ object Helpers {
             val localFundingKey = channelKeys.fundingKey(commitment.fundingTxIndex)
             val signedClosingTx_opt = remoteSig match {
               case remoteSig: IndividualSignature =>
-                val localSig = closingTx.sign(localFundingKey, commitment.remoteFundingPubKey)
-                val signedTx = closingTx.aggregateSigs(localFundingKey.publicKey, commitment.remoteFundingPubKey, localSig, remoteSig)
+                val localSig = closingTx.sign(localFundingKey, commitment.remoteFundingPubKey, commitment.commitmentFormat.channelSighash)
+                val signedTx = closingTx.aggregateSigs(localFundingKey.publicKey, commitment.remoteFundingPubKey, localSig, remoteSig, commitment.commitmentFormat.channelSighash)
                 Some(closingTx.copy(tx = signedTx))
               case remoteSig: PartialSignatureWithNonce =>
                 val localSig_opt = localClosingComplete_opt match {
@@ -1240,7 +1240,7 @@ object Helpers {
         // In that case, we don't need to create a dedicated anchor transaction which avoids using wallet inputs.
         val useMainTxForAnchor = commitment.commitmentFormat match {
           case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat => false
-          case ZeroFeeCommitmentFormat => mainTx_opt match {
+          case _: ZeroFeeCommitmentFormat => mainTx_opt match {
             case Some(mainTx) =>
               val packageWeight = commitTx.weight() + mainTx.expectedWeight + commitment.commitmentFormat.anchorInputWeight
               val packageFee = Transactions.weight2fee(feerates.fastest, packageWeight)
@@ -1275,7 +1275,7 @@ object Helpers {
       /** Claim our main output from the remote commitment transaction, if available. */
       def claimMainOutput(commitKeys: RemoteCommitmentKeys, commitTx: Transaction, dustLimit: Satoshi, commitmentFormat: CommitmentFormat, feerate: FeeratePerKw, finalScriptPubKey: ByteVector)(implicit log: LoggingAdapter): Option[ClaimRemoteMainOutputTx] = {
         commitmentFormat match {
-          case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat | ZeroFeeCommitmentFormat => withTxGenerationLog("remote-main") {
+          case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat | _: ZeroFeeCommitmentFormat => withTxGenerationLog("remote-main") {
             ClaimRemoteMainOutputTx.createUnsignedTx(commitKeys, commitTx, dustLimit, finalScriptPubKey, feerate, commitmentFormat)
           }
         }
@@ -1443,7 +1443,7 @@ object Helpers {
 
         // First we will claim our main output right away.
         val mainTx_opt = commitmentFormat match {
-          case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat | ZeroFeeCommitmentFormat => withTxGenerationLog("remote-main") {
+          case _: AnchorOutputsCommitmentFormat | _: SimpleTaprootChannelCommitmentFormat | _: ZeroFeeCommitmentFormat => withTxGenerationLog("remote-main") {
             ClaimRemoteMainOutputTx.createUnsignedTx(commitKeys, commitTx, dustLimit, finalScriptPubKey, feerateMain, commitmentFormat)
           }
         }

@@ -419,6 +419,16 @@ object Features {
     val mandatory = 128
   }
 
+  case object Blake2b extends Feature with InitFeature with NodeFeature with Bolt11Feature with Bolt12Feature {
+    val rfcName = "option_blake2b"
+    val mandatory = 512
+  }
+
+  case object UnifiedSigs extends Feature with InitFeature with NodeFeature with ChannelTypeFeature {
+    val rfcName = "option_unified_sigs"
+    val mandatory = 514
+  }
+
   /** This feature bit indicates that the node is a mobile wallet that can be woken up via push notifications. */
   case object WakeUpNotificationClient extends Feature with InitFeature {
     val rfcName = "wake_up_notification_client"
@@ -507,7 +517,9 @@ object Features {
     SplicePrototype,
     OnTheFlyFunding,
     FundingFeeCredit,
-    PhoenixZeroReserve
+    PhoenixZeroReserve,
+    Blake2b,
+    UnifiedSigs
   )
 
   // Features may depend on other features, as specified in Bolt 9.
@@ -524,7 +536,8 @@ object Features {
     SimpleTaprootChannels -> (ChannelType :: SimpleClose :: Nil),
     SimpleTaprootChannelsPhoenix -> (ChannelType :: SimpleClose :: Nil),
     AsyncPaymentPrototype -> (TrampolinePaymentPrototype :: Nil),
-    FundingFeeCredit -> (OnTheFlyFunding :: Nil)
+    FundingFeeCredit -> (OnTheFlyFunding :: Nil),
+    UnifiedSigs -> (Blake2b :: Nil)
   )
 
   case class FeatureException(message: String) extends IllegalArgumentException(message)
@@ -532,6 +545,13 @@ object Features {
   def validateFeatureGraph[T <: Feature](features: Features[T]): Option[FeatureException] = featuresDependency.collectFirst {
     case (feature, dependencies) if features.unscoped().hasFeature(feature) && dependencies.exists(d => !features.unscoped().hasFeature(d)) =>
       FeatureException(s"$feature is set but is missing a dependency (${dependencies.filter(d => !features.unscoped().hasFeature(d)).mkString(" and ")})")
+  }
+
+  def validateFeatureVector[T <: Feature](features: Features[T]): Option[FeatureException] = {
+    val encoded = EncodedFeatures(features.toByteVector)
+    (0L until encoded.bin.size * 8 by 2).find(bit => encoded.hasFeatureBit(bit) && encoded.hasFeatureBit(bit + 1)).map { bit =>
+      FeatureException(s"feature bits $bit and ${bit + 1} cannot both be set")
+    }
   }
 
   def testCompatible[T <: Feature](ours: Features[T], theirs: Features[T]): FeatureCompatibilityResult = (ours.testSupported(theirs), theirs.testSupported(ours)) match {

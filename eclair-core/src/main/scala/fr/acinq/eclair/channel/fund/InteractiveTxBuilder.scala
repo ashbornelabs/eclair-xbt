@@ -111,7 +111,7 @@ object InteractiveTxBuilder {
       val localFundingKey = channelKeys.fundingKey(fundingTxIndex)
       val spliceTx = Transactions.SpliceTx(info, tx)
       commitmentFormat match {
-        case _: SegwitV0CommitmentFormat => Right(spliceTx.sign(localFundingKey, remoteFundingPubkey, spentUtxos))
+        case _: SegwitV0CommitmentFormat => Right(spliceTx.sign(localFundingKey, remoteFundingPubkey, spentUtxos, commitmentFormat.channelSighash))
         case _: SimpleTaprootChannelCommitmentFormat => (localNonce_opt, remoteNonce_opt) match {
           case (Some(localNonce), Some(remoteNonce)) => spliceTx.partialSign(localFundingKey, remoteFundingPubkey, spentUtxos, localNonce, Seq(localNonce.publicNonce, remoteNonce)) match {
             case Left(_) => Left(InvalidFundingNonce(channelId, tx.txid))
@@ -996,7 +996,7 @@ private class InteractiveTxBuilder(replyTo: ActorRef[InteractiveTxBuilder.Respon
       case Right((localSpec, localCommitTx, remoteSpec, remoteCommitTx, sortedHtlcTxs)) =>
         require(fundingTx.txOut(fundingOutputIndex).publicKeyScript == localCommitTx.input.txOut.publicKeyScript, "pubkey script mismatch!")
         val localSigOfRemoteTx = fundingParams.commitmentFormat match {
-          case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(localFundingKey, fundingParams.remoteFundingPubKey))
+          case _: SegwitV0CommitmentFormat => Right(remoteCommitTx.sign(localFundingKey, fundingParams.remoteFundingPubKey, fundingParams.commitmentFormat.channelSighash))
           case _: SimpleTaprootChannelCommitmentFormat =>
             remoteCommitNonces_opt match {
               case Some(remoteNonces) =>
@@ -1217,7 +1217,7 @@ object InteractiveTxSigningSession {
       val signedTx_opt = sharedInput.commitmentFormat match {
         case _: SegwitV0CommitmentFormat =>
           (partiallySignedTx.localSigs.previousFundingTxSig_opt, remoteSigs.previousFundingTxSig_opt) match {
-            case (Some(localSig), Some(remoteSig)) => Right(spliceTx.aggregateSigs(localFundingPubkey, sharedInput.remoteFundingPubkey, IndividualSignature(localSig), IndividualSignature(remoteSig)))
+            case (Some(localSig), Some(remoteSig)) => Right(spliceTx.aggregateSigs(localFundingPubkey, sharedInput.remoteFundingPubkey, IndividualSignature(localSig), IndividualSignature(remoteSig), sharedInput.commitmentFormat.channelSighash))
             case _ => Left(InvalidFundingSignature(fundingParams.channelId, Some(partiallySignedTx.txId)))
           }
         case _: SimpleTaprootChannelCommitmentFormat =>
