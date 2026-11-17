@@ -344,7 +344,11 @@ object Transactions {
       // signature will be invalidated if other inputs are added *afterwards* and sighash was SIGHASH_ALL.
       redeemInfo match {
         case redeemInfo: RedeemInfo.SegwitV0 =>
-          tx.signInputCompact(inputIndex, redeemInfo.redeemScript, sighash, input.txOut.amount, SIGVERSION_WITNESS_V0, key)
+          if ((sighash & SIGHASH_UNIFIED) != 0) {
+            tx.signInputCompact(inputIndex, redeemInfo.redeemScript, sighash, spentOutputs, SIGVERSION_WITNESS_V0, key)
+          } else {
+            tx.signInputCompact(inputIndex, redeemInfo.redeemScript, sighash, input.txOut.amount, SIGVERSION_WITNESS_V0, key)
+          }
         case t: RedeemInfo.TaprootKeyPath =>
           tx.signInputTaprootKeyPath(key, inputIndex, spentOutputs, sighash, t.scriptTree_opt)
         case s: RedeemInfo.TaprootScriptPath =>
@@ -359,7 +363,11 @@ object Transactions {
       if (inputIndex >= 0) {
         redeemInfo match {
           case redeemInfo: RedeemInfo.SegwitV0 =>
-            val data = Transaction.hashForSigning(tx, inputIndex, redeemInfo.redeemScript, sighash, input.txOut.amount, SIGVERSION_WITNESS_V0)
+            val data = if ((sighash & SIGHASH_UNIFIED) != 0) {
+              Transaction.hashForSigningUnified(tx, inputIndex, Seq(input.txOut), sighash, SIGVERSION_WITNESS_V0, redeemInfo.redeemScript)
+            } else {
+              Transaction.hashForSigning(tx, inputIndex, redeemInfo.redeemScript, sighash, input.txOut.amount, SIGVERSION_WITNESS_V0)
+            }
             Crypto.verifySignature(data, sig, publicKey)
           case _: RedeemInfo.TaprootKeyPath =>
             val data = Transaction.hashForSigningTaprootKeyPath(tx, inputIndex, Seq(input.txOut), sighash)
