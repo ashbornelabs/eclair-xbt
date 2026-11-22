@@ -23,7 +23,7 @@ import fr.acinq.eclair.crypto.Sphinx.RouteBlinding.BlindedRoute
 import fr.acinq.eclair.wire.protocol.CommonCodecs.varint
 import fr.acinq.eclair.wire.protocol.OnionRoutingCodecs.{ForbiddenTlv, InvalidTlvPayload, MissingRequiredTlv}
 import fr.acinq.eclair.wire.protocol.TlvCodecs.genericTlv
-import fr.acinq.eclair.{Bolt12Feature, CltvExpiryDelta, Features, MilliSatoshi, MilliSatoshiLong, TimestampSecond, UInt64, nodeFee, randomBytes32}
+import fr.acinq.eclair.{Bolt12Feature, CltvExpiryDelta, FeatureSupport, Features, MilliSatoshi, MilliSatoshiLong, TimestampSecond, UInt64, nodeFee, randomBytes32}
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs.vector
@@ -370,6 +370,7 @@ object OfferTypes {
         offer.chains.contains(chain) &&
         offer.quantityMax.forall(max => quantity_opt.nonEmpty && quantity <= max) &&
         quantity_opt.forall(_ => offer.quantityMax.nonEmpty) &&
+        features.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory)) &&
         Features.areCompatible(offer.features, features) &&
         checkSignature()
     }

@@ -31,7 +31,7 @@ import fr.acinq.eclair.router.Router.RouteParams
 import fr.acinq.eclair.wire.protocol.MessageOnion.{FinalPayload, InvoicePayload}
 import fr.acinq.eclair.wire.protocol.OfferTypes._
 import fr.acinq.eclair.wire.protocol.{OnionMessagePayloadTlv, TlvStream}
-import fr.acinq.eclair.{EncodedNodeId, Features, InvoiceFeature, MilliSatoshi, NodeParams, RealShortChannelId, TimestampSecond, randomKey}
+import fr.acinq.eclair.{EncodedNodeId, FeatureSupport, Features, InvoiceFeature, MilliSatoshi, NodeParams, RealShortChannelId, TimestampSecond, randomKey}
 
 object OfferPayment {
   // @formatter:off
@@ -72,7 +72,8 @@ object OfferPayment {
     Behaviors.setup(context =>
       Behaviors.receiveMessagePartial {
         case PayOffer(replyTo, offer, amount, quantity, sendPaymentConfig) =>
-          if (!nodeParams.features.bolt12Features().areSupported(offer.features)) {
+          if (!offer.features.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory)) ||
+            !nodeParams.features.bolt12Features().areSupported(offer.features)) {
             replyTo ! UnsupportedFeatures(offer.features.invoiceFeatures())
             Behaviors.stopped
           } else if (!offer.chains.contains(nodeParams.chainHash)) {

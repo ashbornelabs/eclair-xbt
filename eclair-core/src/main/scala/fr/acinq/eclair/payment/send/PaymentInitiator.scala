@@ -28,7 +28,7 @@ import fr.acinq.eclair.payment.send.BlindedPathsResolver.ResolvedPath
 import fr.acinq.eclair.payment.send.PaymentError._
 import fr.acinq.eclair.router.Router._
 import fr.acinq.eclair.wire.protocol._
-import fr.acinq.eclair.{CltvExpiry, CltvExpiryDelta, Features, MilliSatoshi, MilliSatoshiLong, NodeParams, TimestampMilli}
+import fr.acinq.eclair.{CltvExpiry, CltvExpiryDelta, FeatureSupport, Features, MilliSatoshi, MilliSatoshiLong, NodeParams, TimestampMilli}
 import scodec.bits.ByteVector
 
 import java.util.UUID
@@ -39,6 +39,9 @@ import java.util.UUID
 class PaymentInitiator(nodeParams: NodeParams, outgoingPaymentFactory: PaymentInitiator.MultiPartPaymentFactory) extends Actor with ActorLogging {
 
   import PaymentInitiator._
+
+  private def hasXbtPaymentFeature(invoice: Invoice): Boolean =
+    invoice.features.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory))
 
   override def receive: Receive = main(Map.empty)
 
@@ -56,7 +59,7 @@ class PaymentInitiator(nodeParams: NodeParams, outgoingPaymentFactory: PaymentIn
         case invoice: Bolt11Invoice => ClearRecipient(invoice, r.recipientAmount, finalExpiry, r.userCustomTlvs)
         case invoice: Bolt12Invoice => BlindedRecipient(invoice, r.resolvedPaths, r.recipientAmount, finalExpiry, r.userCustomTlvs)
       }
-      if (!nodeParams.features.invoiceFeatures().areSupported(recipient.features)) {
+      if (!hasXbtPaymentFeature(r.invoice) || !nodeParams.features.invoiceFeatures().areSupported(recipient.features)) {
         replyTo ! PaymentFailed(paymentId, r.paymentHash, LocalFailure(r.recipientAmount, Nil, UnsupportedFeatures(recipient.features)) :: Nil, startedAt = TimestampMilli.now(), settledAt = TimestampMilli.now())
       } else if (Features.canUseFeature(nodeParams.features.invoiceFeatures(), recipient.features, Features.BasicMultiPartPayment)) {
         val fsm = outgoingPaymentFactory.spawnOutgoingMultiPartPayment(context, paymentCfg, publishPreimage = !r.blockUntilComplete)
@@ -83,7 +86,9 @@ class PaymentInitiator(nodeParams: NodeParams, outgoingPaymentFactory: PaymentIn
       if (!r.blockUntilComplete) {
         r.replyTo ! paymentId
       }
-      if (r.invoice.amount_opt.isEmpty) {
+      if (!hasXbtPaymentFeature(r.invoice)) {
+        r.replyTo ! PaymentFailed(paymentId, r.paymentHash, LocalFailure(r.recipientAmount, Nil, UnsupportedFeatures(r.invoice.features)) :: Nil, startedAt = TimestampMilli.now(), settledAt = TimestampMilli.now())
+      } else if (r.invoice.amount_opt.isEmpty) {
         r.replyTo ! PaymentFailed(paymentId, r.paymentHash, LocalFailure(r.recipientAmount, Nil, new IllegalArgumentException("test trampoline payments must not use amount-less invoices")) :: Nil, startedAt = TimestampMilli.now(), settledAt = TimestampMilli.now())
       } else {
         log.info(s"sending trampoline payment with trampolineNodeId=${r.trampolineNodeId} and invoice=${r.invoice.toString}")
@@ -95,7 +100,7 @@ class PaymentInitiator(nodeParams: NodeParams, outgoingPaymentFactory: PaymentIn
     case r: SendPaymentToRoute =>
       val paymentId = UUID.randomUUID()
       val parentPaymentId = r.parentId.getOrElse(UUID.randomUUID())
-      if (!nodeParams.features.invoiceFeatures().areSupported(r.invoice.features)) {
+      if (!hasXbtPaymentFeature(r.invoice) || !nodeParams.features.invoiceFeatures().areSupported(r.invoice.features)) {
         sender() ! PaymentFailed(paymentId, r.paymentHash, LocalFailure(r.recipientAmount, Nil, UnsupportedFeatures(r.invoice.features)) :: Nil, startedAt = TimestampMilli.now(), settledAt = TimestampMilli.now())
       } else {
         sender() ! SendPaymentToRouteResponse(paymentId, parentPaymentId)
