@@ -420,6 +420,11 @@ class TransactionsSpec extends AnyFunSuite with Logging {
         val remoteSig = htlcTimeoutTx.localSig(remoteKeys)
         assert(htlcTimeoutTx.checkRemoteSig(localKeys, remoteSig))
         val signedTx = htlcTimeoutTx.addRemoteSig(localKeys, remoteSig).sign()
+        if (commitmentFormat.unifiedSighash) {
+          val witness = signedTx.txIn.head.witness.stack
+          assert(witness(1).last == 0xa3.toByte) // remote SIGHASH_SINGLE|ANYONECANPAY|UNIFIED
+          assert(witness(2).last == 0x21.toByte) // local SIGHASH_ALL|UNIFIED
+        }
         Transaction.correctlySpends(signedTx, Seq(commitTx), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
         // local detects when remote doesn't use the right sighash flags
         val invalidSighash = Seq(SIGHASH_ALL, SIGHASH_ALL | SIGHASH_ANYONECANPAY, SIGHASH_SINGLE, SIGHASH_NONE)
@@ -444,6 +449,11 @@ class TransactionsSpec extends AnyFunSuite with Logging {
         val preimage = paymentPreimageMap(htlcSuccessTx.paymentHash)
         val remoteSig = htlcSuccessTx.localSig(remoteKeys)
         val signedTx = htlcSuccessTx.addRemoteSig(localKeys, remoteSig, preimage).sign()
+        if (commitmentFormat.unifiedSighash) {
+          val witness = signedTx.txIn.head.witness.stack
+          assert(witness(1).last == 0xa3.toByte) // remote SIGHASH_SINGLE|ANYONECANPAY|UNIFIED
+          assert(witness(2).last == 0x21.toByte) // local SIGHASH_ALL|UNIFIED
+        }
         Transaction.correctlySpends(signedTx, Seq(commitTx), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
         assert(htlcSuccessTx.checkRemoteSig(localKeys, remoteSig))
         // local detects when remote doesn't use the right sighash flags

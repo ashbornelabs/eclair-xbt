@@ -96,22 +96,23 @@ class OpenChannelInterceptorSpec extends ScalaTestWithActorTestKit(ConfigFactory
     eventListener.expectMessageType[ChannelAborted]
   }
 
-  test("reject outgoing channel open when the peer lacks the mandatory XBT feature") { f =>
+  test("allow outgoing channel open when the peer lacks the chain marker") { f =>
     import f._
     val probe = TestProbe[Any]()
     val remoteFeatures = defaultFeatures.remove(Features.Blake2b)
     val request = OpenChannelInitiator(probe.ref, remoteNodeId, Peer.OpenChannel(remoteNodeId, 300_000 sat, Some(ChannelTypes.AnchorOutputsZeroFeeHtlcTx()), None, None, None, None, None, None), defaultFeatures, remoteFeatures)
     openChannelInterceptor ! request
-    assert(probe.expectMessageType[OpenChannelResponse.Rejected].reason.contains("option_blake2b is required for XBT channels"))
+    assert(peer.expectMessageType[SpawnChannelInitiator].channelType == ChannelTypes.AnchorOutputsZeroFeeHtlcTx())
   }
 
-  test("reject incoming channel open when the peer lacks the mandatory XBT feature") { f =>
+  test("allow incoming channel open when the peer lacks the chain marker") { f =>
     import f._
     val remoteFeatures = defaultFeatures.remove(Features.Blake2b)
     val request = OpenChannelNonInitiator(remoteNodeId, Left(openChannel), defaultFeatures, remoteFeatures, peerConnection.ref, remoteAddress)
     openChannelInterceptor ! request
-    assert(peer.expectMessageType[OutgoingMessage].msg.asInstanceOf[Error].toAscii.contains("option_blake2b is required for XBT channels"))
-    eventListener.expectMessageType[ChannelAborted]
+    pendingChannelsRateLimiter.expectMessageType[AddOrRejectChannel].replyTo ! PendingChannelsRateLimiter.AcceptOpenChannel
+    pluginInterceptor.expectMessageType[InterceptOpenChannelReceived].replyTo ! AcceptOpenChannel(randomBytes32(), addFunding_opt = None)
+    assert(peer.expectMessageType[SpawnChannelNonInitiator].addFunding_opt.isEmpty)
   }
 
   test("reject outgoing channel open that would downgrade unified sighash after activation", unifiedSigsRequired) { f =>

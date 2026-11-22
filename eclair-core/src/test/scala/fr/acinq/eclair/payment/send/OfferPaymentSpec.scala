@@ -31,7 +31,7 @@ import fr.acinq.eclair.router.Router.RouteParams
 import fr.acinq.eclair.wire.protocol.MessageOnion.InvoicePayload
 import fr.acinq.eclair.wire.protocol.OfferTypes.{InvoiceRequest, Offer, PaymentInfo}
 import fr.acinq.eclair.wire.protocol.{OfferTypes, OnionMessagePayloadTlv, TlvStream}
-import fr.acinq.eclair.{CltvExpiryDelta, Features, MilliSatoshiLong, NodeParams, TestConstants, randomBytes, randomBytes32, randomKey}
+import fr.acinq.eclair.{Bolt12Feature, CltvExpiryDelta, FeatureSupport, Features, MilliSatoshiLong, NodeParams, TestConstants, randomBytes, randomBytes32, randomKey}
 import org.scalatest.Outcome
 import org.scalatest.funsuite.FixtureAnyFunSuiteLike
 import scodec.bits.{ByteVector, HexStringSyntax}
@@ -39,6 +39,8 @@ import scodec.bits.{ByteVector, HexStringSyntax}
 import scala.concurrent.duration.DurationInt
 
 class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("application")) with FixtureAnyFunSuiteLike {
+
+  private val xbtFeatures: Features[Bolt12Feature] = Features(Features.Blake2b -> FeatureSupport.Mandatory)
 
   case class FixtureParam(offerPayment: ActorRef[Command], nodeParams: NodeParams, postman: TypedProbe[Postman.Command], router: TestProbe, register: TestProbe, paymentInitiator: TestProbe, routeParams: RouteParams)
 
@@ -59,13 +61,23 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
 
   implicit val classicSystem: ActorSystem = system.classicSystem
 
+  test("reject offers without the mandatory XBT marker") { f =>
+    import f._
+    val probe = TestProbe()
+    val merchantKey = randomKey()
+    val offer = Offer(None, Some("non-XBT offer"), merchantKey.publicKey, Features.empty, nodeParams.chainHash)
+    offerPayment ! PayOffer(probe.ref, offer, 40_000_000 msat, 1, SendPaymentConfig(None, connectDirectly = false, 1, routeParams, blocking = false))
+    probe.expectMsgType[UnsupportedFeatures]
+    postman.expectNoMessage(50 millis)
+  }
+
   test("basic offer payment") { f =>
     import f._
 
     val probe = TestProbe()
     val merchantKey = randomKey()
 
-    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, Features.empty, nodeParams.chainHash)
+    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, xbtFeatures, nodeParams.chainHash)
     offerPayment ! PayOffer(probe.ref, offer, 40_000_000 msat, 1, SendPaymentConfig(None, connectDirectly = false, 1, routeParams, blocking = false))
     val Postman.SendMessage(OfferTypes.RecipientNodeId(recipientId), FindRoute, message, expectsReply, replyTo) = postman.expectMessageType[Postman.SendMessage]
     assert(recipientId == merchantKey.publicKey)
@@ -75,7 +87,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
 
     val preimage = randomBytes32()
     val paymentRoute = PaymentBlindedRoute(RouteBlinding.create(randomKey(), Seq(merchantKey.publicKey), Seq(hex"7777")).route, PaymentInfo(0 msat, 0, CltvExpiryDelta(0), 0 msat, 1_000_000_000 msat, ByteVector.empty))
-    val invoice = Bolt12Invoice(invoiceRequest, preimage, merchantKey, 1 minute, Features.empty, Seq(paymentRoute))
+    val invoice = Bolt12Invoice(invoiceRequest, preimage, merchantKey, 1 minute, xbtFeatures, Seq(paymentRoute))
     replyTo ! Postman.Response(InvoicePayload(TlvStream(OnionMessagePayloadTlv.Invoice(invoice.records)), TlvStream.empty))
     val send = paymentInitiator.expectMsgType[SendPaymentToNode]
     assert(send.invoice == invoice)
@@ -89,7 +101,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
     val probe = TestProbe()
     val merchantKey = randomKey()
 
-    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, Features.empty, nodeParams.chainHash)
+    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, xbtFeatures, nodeParams.chainHash)
     offerPayment ! PayOffer(probe.ref, offer, 40_000_000 msat, 1, SendPaymentConfig(None, connectDirectly = false, 1, routeParams, blocking = false))
     for (_ <- 1 to nodeParams.onionMessageConfig.maxAttempts) {
       val Postman.SendMessage(OfferTypes.RecipientNodeId(recipientId), FindRoute, message, expectsReply, replyTo) = postman.expectMessageType[Postman.SendMessage]
@@ -112,7 +124,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
     val probe = TestProbe()
     val merchantKey = randomKey()
 
-    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, Features.empty, nodeParams.chainHash)
+    val offer = Offer(None, Some("amountless offer"), merchantKey.publicKey, xbtFeatures, nodeParams.chainHash)
     offerPayment ! PayOffer(probe.ref, offer, 40_000_000 msat, 1, SendPaymentConfig(None, connectDirectly = false, 1, routeParams, blocking = false))
     val Postman.SendMessage(OfferTypes.RecipientNodeId(recipientId), FindRoute, message, expectsReply, replyTo) = postman.expectMessageType[Postman.SendMessage]
     assert(recipientId == merchantKey.publicKey)
@@ -122,7 +134,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
 
     val preimage = randomBytes32()
     val paymentRoute = PaymentBlindedRoute(RouteBlinding.create(randomKey(), Seq(merchantKey.publicKey), Seq(hex"7777")).route, PaymentInfo(0 msat, 0, CltvExpiryDelta(0), 0 msat, 1_000_000_000 msat, ByteVector.empty))
-    val invoice = Bolt12Invoice(invoiceRequest, preimage, randomKey(), 1 minute, Features.empty, Seq(paymentRoute))
+    val invoice = Bolt12Invoice(invoiceRequest, preimage, randomKey(), 1 minute, Features.empty, Seq(paymentRoute)) // deliberately missing option_blake2b
     replyTo ! Postman.Response(InvoicePayload(TlvStream(OnionMessagePayloadTlv.Invoice(invoice.records)), TlvStream.empty))
 
     probe.expectMsgType[InvalidInvoiceResponse]
@@ -138,7 +150,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
 
     val merchantKey = randomKey()
     val route = RouteBlinding.create(randomKey(), Seq.fill(2)(randomKey().publicKey) :+ merchantKey.publicKey, Seq.fill(3)(randomBytes(10)))
-    val offer = Offer.withPaths(None, Some("implicit node id"), Seq(route.route), Features.empty, nodeParams.chainHash)
+    val offer = Offer.withPaths(None, Some("implicit node id"), Seq(route.route), xbtFeatures, nodeParams.chainHash)
 
     offerPayment ! PayOffer(probe.ref, offer, 10_000_000 msat, 1, SendPaymentConfig(None, connectDirectly = false, 1, routeParams, blocking = false))
     val Postman.SendMessage(OfferTypes.BlindedPath(blindedRoute), FindRoute, message, expectsReply, replyTo) = postman.expectMessageType[Postman.SendMessage]
@@ -150,7 +162,7 @@ class OfferPaymentSpec extends ScalaTestWithActorTestKit(ConfigFactory.load("app
     val preimage = randomBytes32()
     val paymentRoute = PaymentBlindedRoute(RouteBlinding.create(randomKey(), Seq(merchantKey.publicKey), Seq(hex"7777")).route, PaymentInfo(0 msat, 0, CltvExpiryDelta(0), 0 msat, 1_000_000_000 msat, ByteVector.empty))
     val blindedMerchantKey = RouteBlinding.derivePrivateKey(merchantKey, route.lastPathKey)
-    val invoice = Bolt12Invoice(invoiceRequest, preimage, blindedMerchantKey, 1 minute, Features.empty, Seq(paymentRoute))
+    val invoice = Bolt12Invoice(invoiceRequest, preimage, blindedMerchantKey, 1 minute, xbtFeatures, Seq(paymentRoute))
     replyTo ! Postman.Response(InvoicePayload(TlvStream(OnionMessagePayloadTlv.Invoice(invoice.records)), TlvStream.empty))
     val send = paymentInitiator.expectMsgType[SendPaymentToNode]
     assert(send.invoice == invoice)

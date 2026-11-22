@@ -1,10 +1,9 @@
-# XBT Lightning compatibility profile
+# XBT Lightning compatibility
 
-Eclair's XBT Lightning behavior follows the project profile
-`xbt-lightning-compat-v0.1`. The profile reuses standard Lightning wire formats
-and chain identifiers while marking XBT-specific capabilities in feature
-vectors. It is a project compatibility contract, not an official BOLT
-assignment.
+Eclair's XBT Lightning behavior follows the XBT Lightning specifications in
+the [lightning-blake2b/bolts repository](https://github.com/lightning-blake2b/bolts).
+Those specifications are the protocol authority. Eclair-specific notes below
+describe implementation behavior and do not override the BOLTs.
 
 ## Feature assignments
 
@@ -14,14 +13,16 @@ assignment.
 | `option_unified_sigs` | 514 | 515 | `init`, node announcements, channel type |
 
 `option_unified_sigs` depends on `option_blake2b`. Feature vectors use normal
-BOLT bit ordering. An origin must not set both forms of a feature pair.
+BOLT bit ordering. When both bits of a feature pair are set, implementations
+interpret the feature as mandatory.
 
 ## Peer and channel behavior
 
-An XBT node advertises mandatory `option_blake2b`. A peer that omits it may
-remain connected, but Eclair refuses channel creation in either direction with
-that peer. This permits non-channel Lightning clients to connect without
-allowing an XBT channel to fall back to legacy behavior.
+An XBT node advertises mandatory `option_blake2b` in the contexts required by
+the XBT BOLTs. This marker identifies XBT support in payment artifacts; it is
+not a peer-wide channel-open prerequisite. Channel negotiation follows the
+channel-type requirements below, including `option_unified_sigs` when the
+selected channel type requires it.
 
 Channel announcements whose short-channel-id block height is below the
 selected Knots profile's BLAKE2b activation height are excluded from routing.
@@ -50,16 +51,16 @@ Unified-signature channel types use these sighash values:
 |---|---|
 | Funding input and commitment transaction | `SIGHASH_ALL | SIGHASH_UNIFIED` (`0x21`) |
 | Local signature on an HTLC second-stage transaction | `SIGHASH_ALL | SIGHASH_UNIFIED` (`0x21`) |
-| Remote signature on an anchor-format HTLC second-stage transaction | `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | SIGHASH_UNIFIED` (`0x83`) |
-| Remote signature on a zero-fee commitment HTLC second-stage transaction | `SIGHASH_ALL | SIGHASH_UNIFIED` (`0x21`) |
+| Remote signature on an anchor-format HTLC second-stage transaction | `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | SIGHASH_UNIFIED` (`0xa3`) |
+| Remote signature on a zero-fee commitment HTLC second-stage transaction | `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | SIGHASH_UNIFIED` (`0xa3`) |
 | SegWit v0 force-close claim spending a channel output | `SIGHASH_ALL | SIGHASH_UNIFIED` (`0x21`) |
 
-The remote HTLC signature differs by commitment format because anchor-format
-transactions preserve the existing `SINGLE|ANYONECANPAY` fee-bumping behavior,
-while zero-fee commitment transactions use `ALL`. Eclair validates the
-received HTLC signatures against the corresponding format-specific value and
-does not retry with a legacy sighash. Taproot channel signing remains on its
-existing sighash rules and is not negotiated together with unified signatures.
+For both anchor and zero-fee commitment formats, the peer-supplied signature
+on an HTLC second-stage transaction uses `SINGLE|ANYONECANPAY|UNIFIED` (`0xa3`);
+the local signature uses `ALL|UNIFIED` (`0x21`). Eclair validates received
+signatures against the sighash required by the XBT BOLTs and does not retry
+with a legacy sighash. Taproot channel signing remains on its existing sighash
+rules and is not negotiated together with unified signatures.
 
 ## Wallet transaction signing
 
@@ -71,16 +72,17 @@ transaction input.
 
 ## Chain identity and invoices
 
-Lightning `chain_hash` remains the Bitcoin genesis hash for the selected XBT
-network. Standard Lightning invoice HRPs remain in use. XBT payment artifacts
-carry mandatory `option_blake2b`, so implementations that do not understand
-the XBT feature reject them under normal required-feature rules.
+Lightning `chain_hash` identifies the selected XBT network as specified by the
+XBT BOLTs. Standard Lightning invoice HRPs remain in use. XBT BOLT 11 payment
+invoices and BOLT 12 offers and invoices carry mandatory `option_blake2b`;
+Eclair includes and verifies that marker when generating or accepting these
+payment artifacts.
 
 ## Conformance and implementation scope
 
-Pull requests should name the profile version when changing behavior. Channel
-feature parsing, channel-type selection, downgrade rejection, and unified
-channel transaction signing are covered by Eclair's conformance tests. Live
+Changes to protocol behavior should cite the relevant XBT BOLT section. Eclair
+tests cover feature parsing, channel-type negotiation, payment-artifact
+feature requirements, and unified channel transaction signing. Live
 interoperability with other XBT Lightning implementations remains a separate
 integration check; unit tests do not establish cross-implementation
 interoperability.
