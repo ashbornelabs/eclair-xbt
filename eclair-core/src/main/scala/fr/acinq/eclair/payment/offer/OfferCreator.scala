@@ -28,7 +28,7 @@ import fr.acinq.eclair.payment.offer.OfferCreator.CreateOfferResult
 import fr.acinq.eclair.router.Router
 import fr.acinq.eclair.wire.protocol.OfferTypes._
 import fr.acinq.eclair.wire.protocol.TlvStream
-import fr.acinq.eclair.{MilliSatoshi, NodeParams, TimestampSecond, randomBytes32, randomKey}
+import fr.acinq.eclair.{Bolt12Feature, FeatureSupport, Features, MilliSatoshi, NodeParams, TimestampSecond, randomBytes32, randomKey}
 
 /**
  * A short-lived actor that creates an offer based on the parameters provided.
@@ -87,6 +87,9 @@ private class OfferCreator(context: ActorContext[OfferCreator.Command],
         description_opt.map(OfferDescription),
         expiry_opt.map(OfferAbsoluteExpiry),
         issuer_opt.map(OfferIssuer),
+        Some(OfferFeatures(
+          Features[Bolt12Feature](Features.Blake2b -> FeatureSupport.Mandatory).unscoped().toByteVector
+        )),
       ).flatten
       blindedPathsFirstNodeId_opt match {
         case Some(firstNodeId) =>

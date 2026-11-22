@@ -20,12 +20,12 @@ import com.ashbornelabs.bitcoin.xbt.Bech32
 import com.ashbornelabs.bitcoin.xbt.scalacompat.Crypto.{PrivateKey, PublicKey}
 import com.ashbornelabs.bitcoin.xbt.scalacompat.{Block, BlockHash, ByteVector32}
 import fr.acinq.eclair.FeatureSupport.{Mandatory, Optional}
-import fr.acinq.eclair.Features.BasicMultiPartPayment
+import fr.acinq.eclair.Features.{BasicMultiPartPayment, Blake2b}
 import fr.acinq.eclair.crypto.Sphinx.RouteBlinding.{BlindedHop, BlindedRoute}
 import fr.acinq.eclair.wire.protocol.CommonCodecs.varintoverflow
 import fr.acinq.eclair.wire.protocol.OfferCodecs.{invoiceRequestTlvCodec, offerTlvCodec}
 import fr.acinq.eclair.wire.protocol.OfferTypes._
-import fr.acinq.eclair.{BlockHeight, EncodedNodeId, FeatureSupport, Features, MilliSatoshiLong, RealShortChannelId, randomBytes32, randomKey}
+import fr.acinq.eclair.{BlockHeight, Bolt12Feature, EncodedNodeId, FeatureSupport, Features, MilliSatoshiLong, RealShortChannelId, randomBytes32, randomKey}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods
 import org.scalatest.funsuite.AnyFunSuite
@@ -38,12 +38,13 @@ import scala.io.Source
 class OfferTypesSpec extends AnyFunSuite {
   private val nodeKey = PrivateKey(hex"85d08273493e489b9330c85a3e54123874c8cd67c1bf531f4b926c9c555f8e1d")
   private val nodeId = nodeKey.publicKey
+  private val xbtFeatures: Features[Bolt12Feature] = Features(Blake2b -> Mandatory)
 
   test("invoice request is signed") {
     val sellerKey = randomKey()
-    val offer = Offer(Some(100_000 msat), Some("test offer"), sellerKey.publicKey, Features.empty, Block.LivenetGenesisBlock.hash)
+    val offer = Offer(Some(100_000 msat), Some("test offer"), sellerKey.publicKey, xbtFeatures, Block.LivenetGenesisBlock.hash)
     val payerKey = randomKey()
-    val request = InvoiceRequest(offer, 100_000 msat, 1, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val request = InvoiceRequest(offer, 100_000 msat, 1, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(request.checkSignature())
   }
 
@@ -90,9 +91,9 @@ class OfferTypesSpec extends AnyFunSuite {
   }
 
   test("check that invoice request matches offer") {
-    val offer = Offer(Some(2500 msat), Some("basic offer"), randomKey().publicKey, Features.empty, Block.LivenetGenesisBlock.hash)
+    val offer = Offer(Some(2500 msat), Some("basic offer"), randomKey().publicKey, xbtFeatures, Block.LivenetGenesisBlock.hash)
     val payerKey = randomKey()
-    val request = InvoiceRequest(offer, 2500 msat, 1, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val request = InvoiceRequest(offer, 2500 msat, 1, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(request.isValid)
     assert(request.offer == offer)
     val biggerAmount = signInvoiceRequest(request.copy(records = TlvStream(request.records.records.map { case InvoiceRequestAmount(_) => InvoiceRequestAmount(3000 msat) case x => x })), payerKey)
@@ -105,23 +106,23 @@ class OfferTypesSpec extends AnyFunSuite {
   }
 
   test("check that invoice request matches offer (with features)") {
-    val offer = Offer(Some(2500 msat), Some("offer with features"), randomKey().publicKey, Features.empty, Block.LivenetGenesisBlock.hash)
+    val offer = Offer(Some(2500 msat), Some("offer with features"), randomKey().publicKey, xbtFeatures, Block.LivenetGenesisBlock.hash)
     val payerKey = randomKey()
-    val request = InvoiceRequest(offer, 2500 msat, 1, Features(BasicMultiPartPayment -> Optional), payerKey, Block.LivenetGenesisBlock.hash)
+    val request = InvoiceRequest(offer, 2500 msat, 1, xbtFeatures.add(BasicMultiPartPayment, Optional), payerKey, Block.LivenetGenesisBlock.hash)
     assert(request.isValid)
     assert(request.offer == offer)
     val withoutFeatures = InvoiceRequest(offer, 2500 msat, 1, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
-    assert(withoutFeatures.isValid)
+    assert(!withoutFeatures.isValid)
     assert(withoutFeatures.offer == offer)
-    val otherFeatures = InvoiceRequest(offer, 2500 msat, 1, Features(BasicMultiPartPayment -> Mandatory), payerKey, Block.LivenetGenesisBlock.hash)
+    val otherFeatures = InvoiceRequest(offer, 2500 msat, 1, xbtFeatures.add(BasicMultiPartPayment, Mandatory), payerKey, Block.LivenetGenesisBlock.hash)
     assert(!otherFeatures.isValid)
     assert(otherFeatures.offer == offer)
   }
 
   test("check that invoice request matches offer (without amount)") {
-    val offer = Offer(None, Some("offer without amount"), randomKey().publicKey, Features.empty, Block.LivenetGenesisBlock.hash)
+    val offer = Offer(None, Some("offer without amount"), randomKey().publicKey, xbtFeatures, Block.LivenetGenesisBlock.hash)
     val payerKey = randomKey()
-    val request = InvoiceRequest(offer, 500 msat, 1, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val request = InvoiceRequest(offer, 500 msat, 1, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(request.isValid)
     assert(request.offer == offer)
     // Since the offer doesn't contain an amount, the invoice_request must contain one to be valid.
@@ -133,12 +134,13 @@ class OfferTypesSpec extends AnyFunSuite {
 
   test("check that invoice request matches offer (chain compatibility)") {
     {
-      val offer = Offer(TlvStream(OfferAmount(100), OfferDescription("offer without chains"), OfferNodeId(randomKey().publicKey)))
+      val offer = Offer(TlvStream(OfferAmount(100), OfferDescription("offer without chains"), OfferFeatures(xbtFeatures.toByteVector), OfferNodeId(randomKey().publicKey)))
       val payerKey = randomKey()
       val request = {
         val tlvs: Set[InvoiceRequestTlv] = offer.records.records ++ Set(
           InvoiceRequestMetadata(hex"012345"),
           InvoiceRequestAmount(100 msat),
+          InvoiceRequestFeatures(xbtFeatures.toByteVector),
           InvoiceRequestPayerId(payerKey.publicKey),
         )
         val signature = signSchnorr(InvoiceRequest.signatureTag, rootHash(TlvStream(tlvs), invoiceRequestTlvCodec), payerKey)
@@ -154,12 +156,12 @@ class OfferTypesSpec extends AnyFunSuite {
     }
     {
       val (chain1, chain2) = (BlockHash(randomBytes32()), BlockHash(randomBytes32()))
-      val offer = Offer(TlvStream(OfferChains(Seq(chain1, chain2)), OfferAmount(100), OfferDescription("offer with chains"), OfferNodeId(randomKey().publicKey)))
+      val offer = Offer(TlvStream(OfferChains(Seq(chain1, chain2)), OfferAmount(100), OfferDescription("offer with chains"), OfferFeatures(xbtFeatures.toByteVector), OfferNodeId(randomKey().publicKey)))
       val payerKey = randomKey()
-      val request1 = InvoiceRequest(offer, 100 msat, 1, Features.empty, payerKey, chain1)
+      val request1 = InvoiceRequest(offer, 100 msat, 1, xbtFeatures, payerKey, chain1)
       assert(request1.isValid)
       assert(request1.offer == offer)
-      val request2 = InvoiceRequest(offer, 100 msat, 1, Features.empty, payerKey, chain2)
+      val request2 = InvoiceRequest(offer, 100 msat, 1, xbtFeatures, payerKey, chain2)
       assert(request2.isValid)
       assert(request2.offer == offer)
       val noChain = signInvoiceRequest(request1.copy(records = TlvStream(request1.records.records.filter { case InvoiceRequestChain(_) => false case _ => true })), payerKey)
@@ -173,17 +175,18 @@ class OfferTypesSpec extends AnyFunSuite {
     val offer = Offer(TlvStream(
       OfferAmount(500),
       OfferDescription("offer for multiple items"),
+      OfferFeatures(xbtFeatures.toByteVector),
       OfferNodeId(randomKey().publicKey),
       OfferQuantityMax(10),
     ))
     val payerKey = randomKey()
-    val request = InvoiceRequest(offer, 1600 msat, 3, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val request = InvoiceRequest(offer, 1600 msat, 3, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(request.records.get[InvoiceRequestQuantity].nonEmpty)
     assert(request.isValid)
     assert(request.offer == offer)
-    val invalidAmount = InvoiceRequest(offer, 2400 msat, 5, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val invalidAmount = InvoiceRequest(offer, 2400 msat, 5, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(!invalidAmount.isValid)
-    val tooManyItems = InvoiceRequest(offer, 5500 msat, 11, Features.empty, payerKey, Block.LivenetGenesisBlock.hash)
+    val tooManyItems = InvoiceRequest(offer, 5500 msat, 11, xbtFeatures, payerKey, Block.LivenetGenesisBlock.hash)
     assert(!tooManyItems.isValid)
   }
 

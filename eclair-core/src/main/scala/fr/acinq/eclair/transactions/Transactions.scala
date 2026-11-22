@@ -625,7 +625,10 @@ object Transactions {
         case TxOwner.Local => if (commitmentFormat.unifiedSighash) SIGHASH_ALL | SIGHASH_UNIFIED else SIGHASH_ALL
         case TxOwner.Remote => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | (if (commitmentFormat.unifiedSighash) SIGHASH_UNIFIED else 0)
       }
-      case _: ZeroFeeCommitmentFormat if commitmentFormat.unifiedSighash => SIGHASH_ALL | SIGHASH_UNIFIED
+      case _: ZeroFeeCommitmentFormat if commitmentFormat.unifiedSighash => txOwner match {
+        case TxOwner.Local => SIGHASH_ALL | SIGHASH_UNIFIED
+        case TxOwner.Remote => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | SIGHASH_UNIFIED
+      }
       case _: ZeroFeeCommitmentFormat => txOwner match {
         case TxOwner.Local => SIGHASH_ALL
         case TxOwner.Remote => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY

@@ -31,7 +31,7 @@ import fr.acinq.eclair.io.Peer.{OpenChannelResponse, SpawnChannelNonInitiator}
 import fr.acinq.eclair.io.PendingChannelsRateLimiter.AddOrRejectChannel
 import fr.acinq.eclair.wire.protocol
 import fr.acinq.eclair.wire.protocol.{Error, LiquidityAds, NodeAddress}
-import fr.acinq.eclair.{AcceptOpenChannel, FeatureSupport, Features, InitFeature, InterceptOpenChannelPlugin, InterceptOpenChannelReceived, InterceptOpenChannelResponse, Logs, NodeParams, RejectOpenChannel}
+import fr.acinq.eclair.{AcceptOpenChannel, Features, InitFeature, InterceptOpenChannelPlugin, InterceptOpenChannelReceived, InterceptOpenChannelResponse, Logs, NodeParams, RejectOpenChannel}
 import scodec.bits.ByteVector
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
@@ -114,10 +114,7 @@ private class OpenChannelInterceptor(peer: ActorRef[Any],
   private def sanityCheckInitiator(request: OpenChannelInitiator): Behavior[Command] = {
     val announceChannel = request.open.channelFlags_opt.getOrElse(nodeParams.channelConf.channelFlags).announceChannel
     val channelType_opt = request.open.channelType_opt.orElse(ChannelTypes.preferredForPublicChannels(request.localFeatures, request.remoteFeatures, announceChannel = announceChannel))
-    if (!request.remoteFeatures.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory))) {
-      request.replyTo ! OpenChannelResponse.Rejected(s"${Features.Blake2b.rfcName} is required for XBT channels")
-      waitForRequest()
-    } else if (unifiedSigsRequired && (!usesUnifiedSigs(channelType_opt) || !request.remoteFeatures.hasFeature(Features.UnifiedSigs))) {
+    if (unifiedSigsRequired && (!usesUnifiedSigs(channelType_opt) || !request.remoteFeatures.hasFeature(Features.UnifiedSigs))) {
       request.replyTo ! OpenChannelResponse.Rejected(s"${Features.UnifiedSigs.rfcName} is required for XBT channels")
       waitForRequest()
     } else if (request.open.fundingAmount >= Channel.MAX_FUNDING_WITHOUT_WUMBO && !request.localFeatures.hasFeature(Wumbo)) {
@@ -144,11 +141,7 @@ private class OpenChannelInterceptor(peer: ActorRef[Any],
   }
 
   private def sanityCheckNonInitiator(request: OpenChannelNonInitiator): Behavior[Command] = {
-    if (!request.remoteFeatures.hasFeature(Features.Blake2b, Some(FeatureSupport.Mandatory))) {
-      context.log.warn(s"ignoring remote channel open: ${Features.Blake2b.rfcName} is required for XBT channels")
-      sendFailure(s"${Features.Blake2b.rfcName} is required for XBT channels", request)
-      waitForRequest()
-    } else if (unifiedSigsRequired && (!usesUnifiedSigs(request.channelType_opt) || !request.remoteFeatures.hasFeature(Features.UnifiedSigs))) {
+    if (unifiedSigsRequired && (!usesUnifiedSigs(request.channelType_opt) || !request.remoteFeatures.hasFeature(Features.UnifiedSigs))) {
       context.log.warn(s"ignoring remote channel open: ${Features.UnifiedSigs.rfcName} is required for XBT channels")
       sendFailure(s"${Features.UnifiedSigs.rfcName} is required for XBT channels", request)
       waitForRequest()

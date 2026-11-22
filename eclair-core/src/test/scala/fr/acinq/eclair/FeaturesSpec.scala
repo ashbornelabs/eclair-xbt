@@ -87,13 +87,16 @@ class FeaturesSpec extends AnyFunSuite {
     assert(features.nodeAnnouncementFeatures().hasFeature(UnifiedSigs, Some(Optional)))
   }
 
-  test("reject feature vectors that set both forms of a paired feature") {
-    val invalidXbtFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512, 513))))
-    val invalidUnknownFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(1200, 1201))))
-    val validFeatures = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512))))
-    assert(Features.validateFeatureVector(invalidXbtFeatures).nonEmpty)
-    assert(Features.validateFeatureVector(invalidUnknownFeatures).nonEmpty)
-    assert(Features.validateFeatureVector(validFeatures).isEmpty)
+  test("dual-set feature pairs are interpreted as mandatory") {
+    val dualSetBlake2b = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512, 513))))
+    val dualSetUnknown = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(1200, 1201))))
+    val mandatoryBlake2b = Features[Feature](Map.empty[Feature, FeatureSupport], Some(EncodedFeatures.fromFeatureBits(Set(512))))
+
+    assert(dualSetBlake2b.hasFeature(Blake2b, Some(Mandatory)))
+    assert(!dualSetBlake2b.hasFeature(Blake2b, Some(Optional)))
+    assert(Features.validateFeatureVector(dualSetBlake2b).isEmpty)
+    assert(Features.validateFeatureVector(dualSetUnknown).isEmpty)
+    assert(Features.validateFeatureVector(mandatoryBlake2b).isEmpty)
   }
 
   test("features dependencies") {

@@ -90,9 +90,12 @@ case class EncodedFeatures(bin: ByteVector) {
   val isEmpty: Boolean = bin.isEmpty
 
   def hasFeature(feature: Feature, support: Option[FeatureSupport] = None): Boolean = {
+    val mandatory = hasFeatureBit(feature.mandatory)
+    val optional = hasFeatureBit(feature.optional)
     support match {
-      case Some(support) => hasFeatureBit(feature.supportBit(support))
-      case None => hasFeature(feature, Some(FeatureSupport.Optional)) || hasFeature(feature, Some(FeatureSupport.Mandatory))
+      case Some(Mandatory) => mandatory
+      case Some(Optional) => optional && !mandatory
+      case None => mandatory || optional
     }
   }
 
@@ -135,9 +138,14 @@ case class Features[T <: Feature](activated: Map[T, FeatureSupport], encoded_opt
 
   def isEmpty: Boolean = activated.isEmpty && encoded_opt.forall(_.isEmpty)
 
-  def hasFeature(feature: T, support: Option[FeatureSupport] = None): Boolean = support match {
-    case Some(s) => activated.get(feature).contains(s) || encoded_opt.exists(_.hasFeature(feature, support))
-    case None => activated.contains(feature) || encoded_opt.exists(_.hasFeature(feature))
+  def hasFeature(feature: T, support: Option[FeatureSupport] = None): Boolean = {
+    val mandatory = activated.get(feature).contains(Mandatory) || encoded_opt.exists(_.hasFeature(feature, Some(Mandatory)))
+    val optional = activated.get(feature).contains(Optional) || encoded_opt.exists(_.hasFeature(feature, Some(Optional)))
+    support match {
+      case Some(Mandatory) => mandatory
+      case Some(Optional) => optional && !mandatory
+      case None => mandatory || optional
+    }
   }
 
   /** NB: this method is not reflexive, see [[Features.areCompatible]] if you want symmetric validation. */
@@ -240,8 +248,8 @@ object Features {
       // We extract all official features we support.
       val encoded = EncodedFeatures(bytes)
       val activated = knownFeatures.flatMap {
-        case f if encoded.hasFeatureBit(f.optional) => Some(f -> FeatureSupport.Optional)
         case f if encoded.hasFeatureBit(f.mandatory) => Some(f -> FeatureSupport.Mandatory)
+        case f if encoded.hasFeatureBit(f.optional) => Some(f -> FeatureSupport.Optional)
         case _ => None
       }
       Features[Feature](
@@ -547,11 +555,10 @@ object Features {
       FeatureException(s"$feature is set but is missing a dependency (${dependencies.filter(d => !features.unscoped().hasFeature(d)).mkString(" and ")})")
   }
 
-  def validateFeatureVector[T <: Feature](features: Features[T]): Option[FeatureException] = {
-    val encoded = EncodedFeatures(features.toByteVector)
-    (0L until encoded.bin.size * 8 by 2).find(bit => encoded.hasFeatureBit(bit) && encoded.hasFeatureBit(bit + 1)).map { bit =>
-      FeatureException(s"feature bits $bit and ${bit + 1} cannot both be set")
-    }
+  def validateFeatureVector[T <: Feature](_features: Features[T]): Option[FeatureException] = {
+    // BOLT #9 defines a feature pair with both bits set as mandatory support.
+    // Feature vectors don't have an invalid encoding for this case.
+    None
   }
 
   def testCompatible[T <: Feature](ours: Features[T], theirs: Features[T]): FeatureCompatibilityResult = (ours.testSupported(theirs), theirs.testSupported(ours)) match {

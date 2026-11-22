@@ -63,7 +63,11 @@ class Autoprobe(nodeParams: NodeParams, router: ActorRef, paymentInitiator: Acto
               Bolt11Invoice.Description("ignored"),
               Bolt11Invoice.PaymentSecret(randomBytes32()),
               Bolt11Invoice.MinFinalCltvExpiry(6),
-              Bolt11Invoice.InvoiceFeatures(Features((Features.VariableLengthOnion, FeatureSupport.Mandatory), (Features.PaymentSecret, FeatureSupport.Mandatory))),
+              Bolt11Invoice.InvoiceFeatures(Features(
+                (Features.VariableLengthOnion, FeatureSupport.Mandatory),
+                (Features.PaymentSecret, FeatureSupport.Mandatory),
+                (Features.Blake2b, FeatureSupport.Mandatory)
+              )),
             ),
             ByteVector.empty)
           log.info(s"sending payment probe to node=$targetNodeId payment_hash=${fakeInvoice.paymentHash}")
