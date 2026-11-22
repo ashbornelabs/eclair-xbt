@@ -36,7 +36,7 @@ import scala.util.{Success, Try}
 object Scripts {
   private def htlcRemoteSighash(commitmentFormat: CommitmentFormat): Int = commitmentFormat match {
     case _: AnchorOutputsCommitmentFormat => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | (if (commitmentFormat.unifiedSighash) SIGHASH_UNIFIED else 0)
-    case _: ZeroFeeCommitmentFormat if commitmentFormat.unifiedSighash => SIGHASH_ALL | SIGHASH_UNIFIED
+    case _: ZeroFeeCommitmentFormat if commitmentFormat.unifiedSighash => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY | SIGHASH_UNIFIED
     case _: SimpleTaprootChannelCommitmentFormat | _: ZeroFeeCommitmentFormat  => SIGHASH_SINGLE | SIGHASH_ANYONECANPAY
   }
 
